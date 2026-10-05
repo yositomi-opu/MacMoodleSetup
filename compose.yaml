@@ -1,0 +1,47 @@
+name: macmoodlesetup
+x-moodle: &moodle
+  image: macmoodlesetup-web:local
+  build: .
+  platform: linux/amd64
+  environment:
+    DB_PASSWORD: ${DB_PASSWORD:?Run make setup first}
+    MOODLE_PORT: ${MOODLE_PORT:-8088}
+    ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Run make setup first}
+  volumes:
+    - moodledata:/var/moodledata
+  depends_on:
+    db:
+      condition: service_healthy
+    maxima:
+      condition: service_started
+services:
+  db:
+    image: postgres:16-bookworm@sha256:efedf3595f1d6f415c08568ba171029bf54052e754cc9f030e3f2412b21f3d67
+    environment:
+      POSTGRES_DB: moodle
+      POSTGRES_USER: moodle
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Run make setup first}
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U moodle -d moodle']
+      interval: 3s
+      timeout: 3s
+      retries: 40
+  maxima:
+    image: mathinstitut/goemaxima:2026080600-latest@sha256:7b00eb750b8840d8c55ebbc34f86821fb2e08198751545349ad88c6707e6d58d
+    platform: linux/amd64
+    environment:
+      GOEMAXIMA_QUEUE_LEN: '2'
+  web:
+    <<: *moodle
+    ports:
+      - '127.0.0.1:${MOODLE_PORT:-8088}:80'
+  cron:
+    <<: *moodle
+    user: www-data
+    command: [bash, -c, 'while true; do php /var/www/html/admin/cli/cron.php; sleep 60; done']
+    profiles: [installed]
+volumes:
+  database:
+  moodledata:
