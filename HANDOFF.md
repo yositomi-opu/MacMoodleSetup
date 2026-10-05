@@ -21,7 +21,10 @@ loopback port 8088; database and Maxima are internal only.
 - Persistent dedicated DB/moodledata volumes. Backup stops writers, uses pg_dump
   and tar with overridden entrypoint to avoid startup-log contamination of archive.
 - README documents prerequisites, startup, data storage, credentials, limits and backup.
-- Initial local Git repository; GitHub publication has not been performed.
+- Publication target: https://github.com/yositomi-opu/MacMoodleSetup .
+  User created the empty public repository and authorized publication. Added clone
+  instructions; credentials and backup data remain ignored. Check Git remote/history
+  for current push status.
 
 ## Verification actually performed
 

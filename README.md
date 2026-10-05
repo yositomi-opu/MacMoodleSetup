@@ -7,9 +7,11 @@ MCQ編集アプリやSTACK API、ホストのPHP・Maximaは必要ありませ�
 
 1. [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop/) をインストールします。
    GitとMakeがなければ `xcode-select --install` でCommand Line Toolsを導入します。
-2. このリポジトリを同期対象外のフォルダにcloneし、そのフォルダで実行します。
+2. 同期対象外のフォルダで、次を実行します。
 
 ```sh
+git clone https://github.com/yositomi-opu/MacMoodleSetup.git
+cd MacMoodleSetup
 make setup start
 ```
 
