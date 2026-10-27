@@ -57,3 +57,16 @@ An earlier invalid test backup was marked FAILED; the subsequent backup is verif
 - Backup restoration, OS upgrade and production/public hosting have not been tested.
 - Source/image updates must be reviewed together, backed up and retested. .env and
   backups are ignored and must never be committed.
+
+## MoodleSTACKSetupへの名称変更（2026-10-27）
+
+表示名をMoodleSTACKSetupへ変更。MacとWindowsの両対応を目指すが、現在の管理スクリプトはmacOS専用であり、Windows対応・実機検証は未実施。
+
+GitHub側の改名は管理画面での操作が残る。完了後のURLは `https://github.com/yositomi-opu/MoodleSTACKSetup`。
+既存の作業フォルダー、Composeプロジェクト名・イメージ名・ボリューム名、NASとMacの同期識別子は保持する。
+DB・moodledata・稼働サービスは変更しない。既存の5.2対応等の未コミット作業は今回の名称変更commitに含めない。
+
+NASの開発コードはMacBookなしで編集できる。現在のMoodle実行環境はMacBook上にあるため、実機確認にはMacBookの起動・接続とDocker Desktopが必要。
+NAS上でのMoodle起動とWindowsでの実行は未検証。
+
+検証: 文書変更のみ。git diff --checkを実施。setup・再起動・DBアップグレード・ブラウザ操作は実施しない。

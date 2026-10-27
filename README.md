@@ -1,17 +1,31 @@
-# MacMoodleSetup
+# MoodleSTACKSetup
 
-Macで作問・検証するための、Moodle＋STACKの独立したDocker環境です。
+Moodle＋STACKを使って作問・検証するための、独立したDocker環境です。
 MCQ編集アプリやSTACK API、ホストのPHP・Maximaは必要ありません。
 
-## 初回導入
+## 名称変更と対応OS
+
+旧名はMacMoodleSetupです。MacとWindowsの両対応を目指して、表示名を **MoodleSTACKSetup** に変更しました。
+現在の管理スクリプトはmacOS専用です。Windows対応と動作確認は今後の作業です。
+
+GitHub側の改名完了後のURLは `https://github.com/yositomi-opu/MoodleSTACKSetup` です。
+下記のclone手順は改名前のURLを使用し、新しいフォルダー名で取得します。
+既存環境の作業フォルダーは改名不要です。Dockerのプロジェクト名・ボリューム名は既存データの継続利用のため維持します。
+NASとMacの同期設定も従来のフォルダー名を使い続けます。
+
+English: MoodleSTACKSetup is the new project name (formerly MacMoodleSetup).
+Windows support is planned; the current management scripts require macOS.
+Existing checkout paths and Docker resource names remain unchanged to preserve data and synchronization.
+
+## 初回導入（現在はMac）
 
 1. [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop/) をインストールします。
    GitとMakeがなければ `xcode-select --install` でCommand Line Toolsを導入します。
 2. 同期対象外のフォルダで、次を実行します。
 
 ```sh
-git clone https://github.com/yositomi-opu/MacMoodleSetup.git
-cd MacMoodleSetup
+git clone https://github.com/yositomi-opu/MacMoodleSetup.git MoodleSTACKSetup
+cd MoodleSTACKSetup
 make setup start
 ```
 
