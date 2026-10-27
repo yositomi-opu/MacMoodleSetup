@@ -62,7 +62,7 @@ An earlier invalid test backup was marked FAILED; the subsequent backup is verif
 
 表示名をMoodleSTACKSetupへ変更。MacとWindowsの両対応を目指すが、現在の管理スクリプトはmacOS専用であり、Windows対応・実機検証は未実施。
 
-GitHub側の改名は管理画面での操作が残る。完了後のURLは `https://github.com/yositomi-opu/MoodleSTACKSetup`。
+GitHub側の改名は完了。URLは `https://github.com/yositomi-opu/MoodleSTACKSetup`。
 既存の作業フォルダー、Composeプロジェクト名・イメージ名・ボリューム名、NASとMacの同期識別子は保持する。
 DB・moodledata・稼働サービスは変更しない。既存の5.2対応等の未コミット作業は今回の名称変更commitに含めない。
 
@@ -70,3 +70,11 @@ NASの開発コードはMacBookなしで編集できる。現在のMoodle実行�
 NAS上でのMoodle起動とWindowsでの実行は未検証。
 
 検証: 文書変更のみ。git diff --checkを実施。setup・再起動・DBアップグレード・ブラウザ操作は実施しない。
+
+## GitHubリポジトリ改名完了（2026-10-27）
+
+- GitHub APIでリポジトリIDが同一のまま `yositomi-opu/MoodleSTACKSetup` へ改名されたことを確認。
+- READMEのclone URLとNAS側originを新URLへ更新。既存の作業フォルダー、同期識別子、Dockerリソース名は保持。
+- 名称変更に関する文書2ファイルだけをcommit・公開対象とし、既存の未コミット作業は保持。
+- git diff --check成功。文書とGit接続先のみの変更で、サービス再起動・DB更新・ブラウザ検証は実施していない。
+- Mac側cloneのGit remoteは今回未更新。必要時に新URLへ変更する。Mac側へのコード同期・配備は今回行わない。
