@@ -6,17 +6,17 @@ MCQ編集アプリやSTACK API、ホストのPHP・Maximaは必要ありませ�
 ## 名称変更と対応OS
 
 旧名はMacMoodleSetupです。MacとWindowsの両対応を目指して、表示名を **MoodleSTACKSetup** に変更しました。
-現在の管理スクリプトはmacOS専用です。Windows対応と動作確認は今後の作業です。
+Mac用の既存スクリプトに加え、WindowsのPowerShell／コマンドプロンプトから使える管理コマンドを用意しています。Windows実機でのDocker・Moodle通し確認は未実施です。[Windows導入・検証手順](WINDOWS.md)を参照してください。
 
 GitHubリポジトリは [MoodleSTACKSetup](https://github.com/yositomi-opu/MoodleSTACKSetup) へ改名済みです。
 既存環境の作業フォルダーは改名不要です。Dockerのプロジェクト名・ボリューム名は既存データの継続利用のため維持します。
 NASとMacの同期設定も従来のフォルダー名を使い続けます。
 
 English: MoodleSTACKSetup is the new project name (formerly MacMoodleSetup).
-Windows support is planned; the current management scripts require macOS.
+A native Windows launcher is available; end-to-end Windows Docker/Moodle validation remains outstanding. See [Windows setup and verification](WINDOWS.md).
 Existing checkout paths and Docker resource names remain unchanged to preserve data and synchronization.
 
-## 初回導入（現在はMac）
+## 初回導入（Mac）
 
 1. [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop/) をインストールします。
    GitとMakeがなければ `xcode-select --install` でCommand Line Toolsを導入します。
@@ -37,6 +37,28 @@ MoodleのGPLライセンスへの同意が必要です。setupは公式CLIの `-
 ユーザー名は `admin`、初期パスワードは自動生成し、Git対象外の `.env` に保存します。
 ブラウザでパスワードを変更した後は、表示される初期パスワードは使用できません。
 `.env` はDB接続情報も含むため、大切に保管してください。
+
+## 初回導入（Windows）
+
+Docker Desktop（Linuxコンテナー／WSL 2バックエンド）、Git、Python 3.10以降（`py`ランチャー付き）を導入し、Docker Desktopを起動してください。Make・Bash・ホストのPHP・Maxima・OpenSSLは不要です。Windows x64を導入候補とし、Windows Armは未検証です。
+
+PowerShellで、OneDriveなどの同期対象外の個人用フォルダーにcloneします。
+
+```powershell
+git clone https://github.com/yositomi-opu/MoodleSTACKSetup.git
+cd MoodleSTACKSetup
+.\moodle.cmd doctor
+.\moodle.cmd setup start
+.\moodle.cmd credentials
+```
+
+http://localhost:8088 を開きます。Makeを導入済みなら `make setup start` でも同じWindows用処理を呼び出します。`moodle.cmd`の代わりに `py -3 scripts/manage.py setup start` も使えます。PowerShellの実行ポリシー変更は不要です。Dockerの起動やWSL導入は利用者が行い、このコマンドではOS設定を変更しません。
+
+Windows用の管理処理は、Macと同じComposeプロジェクト・ポート・DB・ファイル保存先を使用します。既存の環境を初期化せず、setupは新規インストールまたは通常のDB更新を行います。ソース・イメージは固定版（Moodle 4.5.15／STACK 4.13.1）で、最新版を自動取得するものではありません。5.2用の未公開開発環境はこの導入には含まれません。
+
+Windowsでは以下の表の `make start` を `.\moodle.cmd start`、`make backup` を `.\moodle.cmd backup` のように読み替えられます。`doctor` は設定ファイルやDBを作らず、Docker ComposeとLinuxエンジンの準備状態を確認します。[詳しい導入・実機確認・トラブル対応](WINDOWS.md)を参照してください。
+
+English: On Windows, install Docker Desktop with Linux containers/WSL 2, Git and Python 3.10+ with the `py` launcher. Start Docker Desktop, clone the repository into a private non-synced folder, and run `.\moodle.cmd doctor`, `.\moodle.cmd setup start`, then `.\moodle.cmd credentials` in PowerShell. GNU Make is optional; `make setup start` routes to the native Windows manager when installed. No Bash, host PHP/Maxima/OpenSSL or PowerShell execution-policy change is required. Versions stay pinned; Windows end-to-end installation and browser grading remain unverified. See [Windows guide](WINDOWS.md).
 
 ## 日常の操作
 
