@@ -16,8 +16,16 @@ ACTIONS = ('doctor', 'setup', 'start', 'stop', 'restart', 'check', 'logs', 'stat
 
 
 class Manager:
-    def __init__(self, root=ROOT):
+    def __init__(self, root=ROOT, version='45'):
+        if version not in ('45', '53'):
+            raise ValueError('Unknown Moodle environment')
         self.root = Path(root)
+        self.version = version
+        self.settings_file = '.env53' if version == '53' else '.env'
+        self.compose_file = 'compose53.yaml' if version == '53' else 'compose.yaml'
+        self.project = 'macmoodlesetup53' if version == '53' else 'macmoodlesetup'
+        self.default_port = '8090' if version == '53' else '8088'
+        self.sources = 'docker/moodle53/sources.txt' if version == '53' else 'docker/sources.txt'
         # Compose interpolation must not pick up credentials from another project.
         self.env = {k: v for k, v in os.environ.items()
                     if k.upper() not in {'DB_PASSWORD', 'ADMIN_PASSWORD', 'MOODLE_PORT'}}
@@ -26,8 +34,8 @@ class Manager:
         return subprocess.run(args, cwd=self.root, env=self.env, check=True, **kwargs)
 
     def compose(self, *args, **kwargs):
-        return self.run(['docker', 'compose', '--project-name', 'macmoodlesetup',
-                         '--env-file', '.env', '-f', 'compose.yaml', *args], **kwargs)
+        return self.run(['docker', 'compose', '--project-name', self.project,
+                         '--env-file', self.settings_file, '-f', self.compose_file, *args], **kwargs)
 
     def doctor(self):
         if not shutil.which('docker'):
@@ -43,14 +51,14 @@ class Manager:
         print('Docker Compose and Linux engine: OK / Dockerの準備完了', flush=True)
 
     def settings(self, create=False):
-        path = self.root / '.env'
+        path = self.root / self.settings_file
         if create and not path.exists():
             # Exclusive creation: repeat setup cannot replace existing passwords.
             with open(path, 'x', encoding='utf-8', newline='\n', opener=lambda p, f: os.open(p, f, 0o600)) as stream:
-                stream.write('MOODLE_PORT=8088\nDB_PASSWORD=' + secrets.token_hex(24)
+                stream.write('MOODLE_PORT=' + self.default_port + '\nDB_PASSWORD=' + secrets.token_hex(24)
                              + '\nADMIN_PASSWORD=Mm1!' + secrets.token_hex(16) + '\n')
         if not path.is_file():
-            raise ValueError('Run .\\moodle.cmd setup first. / 先にsetupを実行してください。')
+            raise ValueError('Run setup' + ('53' if self.version == '53' else '') + ' first. / 先に対象環境のsetupを実行してください。')
         values = {}
         for line in path.read_text(encoding='utf-8-sig').splitlines():
             line = line.strip()
@@ -66,6 +74,16 @@ class Manager:
             raise ValueError('Missing .env settings. / .envの必須項目が不足しています。')
         if not values['MOODLE_PORT'].isdigit() or not 1024 <= int(values['MOODLE_PORT']) <= 65535:
             raise ValueError('MOODLE_PORT must be 1024–65535. / ポートは1024〜65535を指定してください。')
+        if self.version == '53':
+            for other, default in [('.env', '8088'), ('.env52', '8089')]:
+                port = default
+                other_path = self.root / other
+                if other_path.is_file():
+                    for line in other_path.read_text(encoding='utf-8-sig').splitlines():
+                        if line.startswith('MOODLE_PORT='):
+                            port = line.split('=', 1)[1].strip()
+                if int(values['MOODLE_PORT']) == int(port):
+                    raise ValueError('Moodle 5.3 must use a different port from 4.5/5.2. / 5.3には4.5/5.2と別のポートを指定してください。')
         return values
 
     def start(self, port):
@@ -77,7 +95,10 @@ class Manager:
         print('Moodle: http://localhost:' + port, flush=True)
 
     def backup(self):
-        folder = self.root / 'backups' / datetime.now().strftime('%Y%m%d-%H%M%S-%f')
+        base = self.root / 'backups'
+        if self.version == '53':
+            base /= 'moodle53'
+        folder = base / datetime.now().strftime('%Y%m%d-%H%M%S-%f')
         folder.mkdir(parents=True, mode=0o700)
         try:
             self.compose('stop', 'web', 'cron')
@@ -87,16 +108,16 @@ class Manager:
             with (folder / 'moodledata.tar.gz').open('wb') as stream:
                 self.compose('run', '--rm', '--no-deps', '-T', '--user', 'root', '--entrypoint', 'tar',
                              'web', '-czf', '-', '-C', '/var/moodledata', '.', stdout=stream)
-            shutil.copyfile(self.root / '.env', folder / 'settings.env')
+            shutil.copyfile(self.root / self.settings_file, folder / 'settings.env')
             (folder / 'settings.env').chmod(0o600)
-            shutil.copyfile(self.root / 'docker/sources.txt', folder / 'sources.txt')
+            shutil.copyfile(self.root / self.sources, folder / 'sources.txt')
             with (folder / 'images.txt').open('wb') as stream:
                 self.compose('config', '--images', stdout=stream)
         except Exception:
             (folder / 'FAILED').write_text('Incomplete backup. Do not use for restoration.\n', encoding='utf-8')
             raise
         finally:
-            print('Services remain stopped. Use start after checking the backup. / サービスは停止したままです。確認後にstartで再開してください。', flush=True)
+            print('Services remain stopped. Use start' + ('53' if self.version == '53' else '') + ' after checking the backup. / サービスは停止したままです。確認後に対象環境のstartで再開してください。', flush=True)
         print('Backup saved / バックアップ保存: ' + str(folder), flush=True)
 
     def action(self, action):
@@ -122,7 +143,8 @@ class Manager:
             self.compose('up', '-d', 'db', 'maxima', 'web')
             self.compose('exec', '-T', '--user', 'www-data', 'web', 'bash', '/opt/macmoodle/bootstrap.sh')
             self.compose('exec', '-T', '--user', 'www-data', 'web', 'php', '/opt/macmoodle/check.php')
-            print('Setup complete. Run start, then credentials. / setup完了。startとcredentialsを実行してください。', flush=True)
+            suffix = '53' if self.version == '53' else ''
+            print('Setup complete. Run start' + suffix + ', then credentials' + suffix + '. / setup完了。対象環境のstartとcredentialsを実行してください。', flush=True)
         elif action == 'start':
             self.start(values['MOODLE_PORT'])
         elif action == 'stop':
@@ -142,12 +164,13 @@ class Manager:
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description='MoodleSTACKSetup: native Windows commands / Windows用管理コマンド')
-    parser.add_argument('actions', nargs='+', choices=ACTIONS)
+    parser.add_argument('--moodle', choices=('45', '53'), default='45')
+    parser.add_argument('actions', nargs='+', choices=ACTIONS + tuple(a + '53' for a in ACTIONS))
     args = parser.parse_args(argv)
-    manager = Manager()
     try:
         for action in args.actions:
-            manager.action(action)
+            version = '53' if action.endswith('53') else args.moodle
+            Manager(version=version).action(action[:-2] if action.endswith('53') else action)
     except subprocess.CalledProcessError as error:
         print('Docker command failed; subsequent actions were not run. / Dockerコマンドが失敗したため、後続処理を中止しました。', file=sys.stderr)
         return error.returncode or 1

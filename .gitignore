@@ -4,3 +4,5 @@ backups/
 
 __pycache__/
 *.py[cod]
+
+.env53

@@ -77,6 +77,41 @@ Mac再起動後は `make start` を使います。常時自動起動は前提に
 setupを繰り返しても初期化やパスワード再設定はしません。ただしソース更新後のsetupは
 MoodleのDBアップグレードを行うため、更新前にバックアップを取ってください。
 
+## Moodle 5.3を追加する
+
+4.5を残したまま、別サイトとしてMoodle 5.3.0を追加できます。5.3はPHP 8.3／PostgreSQL 17／STACK 4.13.1／GoeMaxima 2026080600を固定して使用します。公式ソースは `docker/moodle53/sources.txt`、専用構成は `compose53.yaml` です。4.5のDB・教材・アカウントを移行する操作ではありません。
+
+Mac（Python 3.10以降も必要）：
+
+```sh
+make setup53 start53
+make credentials53
+```
+
+Windows（PowerShell）：
+
+```powershell
+.\moodle.cmd setup53 start53
+.\moodle.cmd credentials53
+```
+
+http://localhost:8090 を開きます。日常操作は `start53`／`stop53`／`restart53`／`check53`／`logs53`／`status53`／`open53`／`backup53` です。Macでは `make check53`、Windowsでは `.\moodle.cmd check53` のように使います。
+
+| 対象 | Moodle 4.5 | Moodle 5.3 |
+|---|---|---|
+| URL | http://localhost:8088 | http://localhost:8090 |
+| 設定（Git対象外） | `.env` | `.env53` |
+| Composeプロジェクト | `macmoodlesetup` | `macmoodlesetup53` |
+| DB／ファイルボリューム | `macmoodlesetup_database`／`macmoodlesetup_moodledata` | `macmoodlesetup53_database`／`macmoodlesetup53_moodledata` |
+| DB | PostgreSQL 16 | PostgreSQL 17 |
+| バックアップ | `backups/日時/` | `backups/moodle53/日時/` |
+
+5.3はDB・Maxima・Web・cron・ネットワーク・ログインCookieを分けています。5.3用操作は4.5のサービスを起動・停止・更新しません。既存の5.2開発環境の既定ポート8089も避けます。8090が使用中なら`.env53`のMOODLE_PORTを変更してください。4.5／5.2と同じポートは拒否します。setup53の再実行は5.3だけを通常のMoodle手順で更新するため、既存サイトでは先にbackup53を取得してください。
+
+Moodle 5.3のPostgreSQL最小要件は17です。[公式要件](https://moodledev.io/general/releases/5.3)に従い、既存のPostgreSQL 16ボリュームを流用しません。テストで確認した範囲と未確認項目はHANDOFF.mdを参照してください。Windows/Mac実機での新規5.3導入・ブラウザー表示・問題XML取込・採点確認は別途必要です。
+
+English: Add a separate Moodle 5.3.0 site using `make setup53 start53` on Mac (Python 3.10+ required) or `.\moodle.cmd setup53 start53` on Windows. Use credentials53 for login details and open http://localhost:8090. The 53-suffixed lifecycle actions operate only on the dedicated .env53, Compose project, PostgreSQL 17 database, Maxima, web, cron, network and cookie. Existing 4.5/5.2 data is neither upgraded nor migrated. Sources and image digests are pinned. Back up before repeating setup on an existing 5.3 site. Windows/Mac Docker and browser/grading verification remains separate from orchestration tests; see HANDOFF.md for actual results.
+
 ## Moodleでの利用
 
 コースを作成し、問題バンクにMoodle XMLをインポートできます。

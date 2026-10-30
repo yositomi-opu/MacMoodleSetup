@@ -89,3 +89,18 @@ In PowerShell, clone into a private local folder outside OneDrive, then run `.\m
 Versions remain pinned to Moodle 4.5.15 and STACK 4.13.1. Existing Docker project/volume names are retained. Repeat setup preserves credentials and uses Moodle's normal upgrade path; back up before upgrades. Backups stop writers, write binary bytes directly and leave services stopped. Keep `.env` and backups private using Windows folder permissions. No automatic restore or data reset is provided.
 
 For acceptance, verify doctor, initial setup/login, official STACK healthcheck, XML import and correct/incorrect grading, stop/start persistence, repeated setup, and backup followed by restart. Unit tests cover orchestration only and do not establish successful Docker installation or grading. Report OS/CPU/Python/Docker/Compose versions and failing commands, excluding credentials and private course data.
+
+
+## Moodle 5.3の追加
+
+上記の導入準備後、別サイトを追加できます。
+
+```powershell
+.\moodle.cmd setup53 start53
+.\moodle.cmd credentials53
+.\moodle.cmd check53
+```
+
+URLは http://localhost:8090、設定は`.env53`です。4.5のデータや認証情報を置き換えません。打ち合わせ用確認項目の各操作は、`setup53`／`start53`／`stop53`／`check53`／`backup53`へ読み替えて確認してください。Windows実機のDocker・ブラウザー・採点確認は未実施です。
+
+English: To add the isolated 5.3 site, run `.\moodle.cmd setup53 start53`, then credentials53 and check53. Use http://localhost:8090. The earlier acceptance checklist applies with 53-suffixed actions; Windows Docker/browser/grading validation is still required.

@@ -91,3 +91,11 @@ NAS上でのMoodle起動とWindowsでの実行は未検証。
 ### Windows候補のCI実測
 
 - GitHub Actions run 41129167767で、Windows/macOS/UbuntuそれぞれPython3.10・3.12の6ジョブすべて成功。各OSで管理処理単体テスト10件、Windows2ジョブではmoodle.cmd --helpの実行も成功。実行記録: https://github.com/yositomi-opu/MoodleSTACKSetup/actions/runs/41129167767 。Docker/Moodleのビルド・実起動・採点を検証したものではない。
+
+## Moodle 5.3追加候補（2026-10-31）
+
+- 公式5.3.0タグをcommit 42622298fe06f9626d988d60b2bf589bd8f850e8へ解決して固定。PHP8.3、Composer2.8.11（SHA256確認）、PostgreSQL17-bookworm（公式レジストリのmulti-platform digest固定）、既存STACK4.13.1/GoeMaxima2026080600を採用。公式要件のPostgreSQL17以上を確認し、4.5/5.2のDBを流用しない。
+- compose53.yaml、docker/moodle53/*を追加。専用プロジェクトmacmoodlesetup53、localhost8090、.env53、DB/moodledata/Maxima/Web/cron/ネットワーク/Cookieを分離。既存4.5/5.2を起動・停止・移行しない。5.xのpublic公開、CLI互換入口、Composer lockを使用。未公開PDF2submission等は同梱しない。5.3 cronはroot用entrypointを迂回しwww-dataで動かす。
+- Python管理処理を45/53へ対応し、setup53/start53等のサフィックスまたは--moodle 53で指定。Macの53ターゲットはPython3を使用、Windowsはmoodle.cmd。4.5は従来のMacBashとWindows既定動作を維持。5.3は4.5/5.2とのポート重複を検査し、バックアップもbackups/moodle53へ分離。
+- ローカルのPython単体14件、PHP3ファイルの構文、bootstrap Bash構文、diff --check成功。5.3の設定・認証情報・プロジェクト・ポート・ソース・バックアップ分離、再setup保持、版別操作のルーティングを確認。Dockerなしの環境なので、これは実インストールの確認ではない。
+- CIへUbuntuの実Dockerビルド、新規setup/start、HTTP管理者ログイン、再setup/STACK公式検査、stop/start/backup/checkを追加。実測結果は後続記録へ。Windows/Macの実5.3 Docker導入、ブラウザー、問題XML取込/採点、バックアップ復元は未確認。既存環境や利用者データは変更しない。

@@ -13,8 +13,8 @@ spec.loader.exec_module(manage)
 
 
 class FakeManager(manage.Manager):
-    def __init__(self, root):
-        super().__init__(root)
+    def __init__(self, root, version='45'):
+        super().__init__(root, version=version)
         self.calls = []
         self.fail = None
 

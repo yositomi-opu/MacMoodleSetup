@@ -20,3 +20,25 @@ jobs:
       - if: runner.os == 'Windows'
         shell: cmd
         run: moodle.cmd --help
+  moodle53-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build, install and start a fresh Moodle 5.3 site
+        run: python scripts/manage.py setup53 start53
+      - name: Verify real HTTP admin login
+        run: python scripts/tests/http_login53.py
+      - name: Repeat setup and official STACK healthcheck
+        run: python scripts/manage.py setup53 start53 check53
+      - name: Stop, restart, back up and check again
+        run: python scripts/manage.py stop53 start53 backup53 start53 check53
+      - name: Logs on failure (no credentials command)
+        if: failure()
+        run: python scripts/manage.py logs53
+      - name: Stop disposable services
+        if: always()
+        run: python scripts/manage.py stop53
