@@ -87,3 +87,7 @@ NAS上でのMoodle起動とWindowsでの実行は未検証。
 - .gitattributesでコンテナー内のsh/PHPとMakefile等のLFを固定し、cmdはCRLF。PythonキャッシュをGit除外。README日英とWINDOWS.mdへ準備・初回操作・障害時の確認・打ち合わせ用の実機受入項目を追加。対象はMoodle 4.5.15/STACK4.13.1。既存作業ツリーの5.2/PDF2submission等の未公開変更は含めない。
 - 検証: Linux上でPython単体テスト10件成功。空白/日本語を含む作業パス、再setup時の設定保持、起動失敗時のcron抑止、複数操作の中断、再起動時のデータ保持、バックアップのバイナリー保存・失敗印、CRLF設定、無効設定、Windowsコンテナー拒否、Docker不在/起動前、引数配列によるshell不使用・環境変数分離を検証。make -nのMac/Windows分岐、Bash/Python構文、git diff --check成功。
 - GitHub ActionsにUbuntu/Windows/macOS × Python3.10/3.12の管理処理単体テストとWindowsランチャーhelpを追加。CIもDocker・Moodleの通し検証ではない。手元にはDockerがなく、今回コードで実setup・再setup・start/stop・STACK healthcheck・ブラウザー・XML取込/採点・バックアップ復元を実行していない。旧Macでの実績と今回の未検証範囲を区別し、Windows実機ではWINDOWS.mdの受入項目を実施する。Windows Armは未検証。
+
+### Windows候補のCI実測
+
+- GitHub Actions run 41129167767で、Windows/macOS/UbuntuそれぞれPython3.10・3.12の6ジョブすべて成功。各OSで管理処理単体テスト10件、Windows2ジョブではmoodle.cmd --helpの実行も成功。実行記録: https://github.com/yositomi-opu/MoodleSTACKSetup/actions/runs/41129167767 。Docker/Moodleのビルド・実起動・採点を検証したものではない。
