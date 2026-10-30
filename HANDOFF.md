@@ -99,3 +99,10 @@ NAS上でのMoodle起動とWindowsでの実行は未検証。
 - Python管理処理を45/53へ対応し、setup53/start53等のサフィックスまたは--moodle 53で指定。Macの53ターゲットはPython3を使用、Windowsはmoodle.cmd。4.5は従来のMacBashとWindows既定動作を維持。5.3は4.5/5.2とのポート重複を検査し、バックアップもbackups/moodle53へ分離。
 - ローカルのPython単体14件、PHP3ファイルの構文、bootstrap Bash構文、diff --check成功。5.3の設定・認証情報・プロジェクト・ポート・ソース・バックアップ分離、再setup保持、版別操作のルーティングを確認。Dockerなしの環境なので、これは実インストールの確認ではない。
 - CIへUbuntuの実Dockerビルド、新規setup/start、HTTP管理者ログイン、再setup/STACK公式検査、stop/start/backup/checkを追加。実測結果は後続記録へ。Windows/Macの実5.3 Docker導入、ブラウザー、問題XML取込/採点、バックアップ復元は未確認。既存環境や利用者データは変更しない。
+
+### 5.3候補の実Docker・CI結果
+
+- GitHub Actions run 41132952108（候補commit eae00eba4b6e7f84f80748ceff703cc35e1bf3e8）で全7ジョブ成功。Windows/macOS/Ubuntu × Python3.10/3.12の各14件とWindowsランチャーhelpが成功。
+- Ubuntuの実Dockerで5.3.0/PHP8.3/PostgreSQL17/STACK4.13.1/GoeMaximaをビルド・新規導入・起動。実HTTP管理者ログイン成功。再setup、STACK公式検査、停止・再開、バックアップ保存後の再開と再検査がすべて成功。
+- 公式検査はCAS接続、Unicode、plots、JSXGraph、Parsons、free text、GeoGebra、追加ライブラリ、DBキャッシュとSTACK-Maximaライブラリ2026080600を確認。実Maximaは5.44.0。検証は専用の使い捨てCI環境で行い、MacBookの既存環境には触れていない。
+- HTTPログインは実ブラウザーの描画確認ではない。Windows/Mac上でのDocker導入、問題XMLの実取込・採点、バックアップ復元は今回未確認。記録: https://github.com/yositomi-opu/MoodleSTACKSetup/actions/runs/41132952108 。この候補と記録をmainへfast-forward公開する。

@@ -108,7 +108,7 @@ http://localhost:8090 を開きます。日常操作は `start53`／`stop53`／`
 
 5.3はDB・Maxima・Web・cron・ネットワーク・ログインCookieを分けています。5.3用操作は4.5のサービスを起動・停止・更新しません。既存の5.2開発環境の既定ポート8089も避けます。8090が使用中なら`.env53`のMOODLE_PORTを変更してください。4.5／5.2と同じポートは拒否します。setup53の再実行は5.3だけを通常のMoodle手順で更新するため、既存サイトでは先にbackup53を取得してください。
 
-Moodle 5.3のPostgreSQL最小要件は17です。[公式要件](https://moodledev.io/general/releases/5.3)に従い、既存のPostgreSQL 16ボリュームを流用しません。テストで確認した範囲と未確認項目はHANDOFF.mdを参照してください。Windows/Mac実機での新規5.3導入・ブラウザー表示・問題XML取込・採点確認は別途必要です。
+Moodle 5.3のPostgreSQL最小要件は17です。[公式要件](https://moodledev.io/general/releases/5.3)に従い、既存のPostgreSQL 16ボリュームを流用しません。[Linuxの実Docker検証](https://github.com/yositomi-opu/MoodleSTACKSetup/actions/runs/41132952108)で、新規導入・管理者HTTPログイン・再setup・STACK公式検査・停止再開・バックアップ後再開が成功しています。詳細はHANDOFF.mdを参照してください。Windows/Mac実機での新規5.3導入・ブラウザー表示・問題XML取込・採点確認は別途必要です。
 
 English: Add a separate Moodle 5.3.0 site using `make setup53 start53` on Mac (Python 3.10+ required) or `.\moodle.cmd setup53 start53` on Windows. Use credentials53 for login details and open http://localhost:8090. The 53-suffixed lifecycle actions operate only on the dedicated .env53, Compose project, PostgreSQL 17 database, Maxima, web, cron, network and cookie. Existing 4.5/5.2 data is neither upgraded nor migrated. Sources and image digests are pinned. Back up before repeating setup on an existing 5.3 site. Windows/Mac Docker and browser/grading verification remains separate from orchestration tests; see HANDOFF.md for actual results.
 
