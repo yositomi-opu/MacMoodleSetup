@@ -11,6 +11,8 @@ final class provider implements \core_privacy\local\metadata\provider, \core_pri
                 'local_vlearner_event' => ['runid', 'attemptid', 'payloadjson', 'timecreated']] as $table => $fields) {
             $collection->add_database_table($table, array_fill_keys($fields, 'privacy:metadata'), 'privacy:metadata');
         }
+        $collection->add_external_location_link('api.typesafe.ai',
+            ['state' => 'privacy:external', 'criteria' => 'privacy:external'], 'privacy:external');
         return $collection;
     }
     public static function get_contexts_for_userid(int $userid): \core_privacy\local\request\contextlist {

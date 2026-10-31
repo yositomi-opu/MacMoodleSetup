@@ -57,7 +57,21 @@ final class runner {
                 if (array_map('intval', array_keys($scenario)) !== array_map('intval', $slots)) {
                     throw new \RuntimeException('Scenario must cover every quiz slot, in order');
                 }
-                $responses = []; $choices = [];
+                $design = experiment::options($config['design'] ?? [], $profile, $scenario);
+                if (isset($config['designversion']) && $config['designversion'] !== experiment::VERSION) {
+                    throw new \RuntimeException('Experiment design version changed');
+                }
+                $responses = []; $choices = []; $decisions = [];
+                $history = [];
+                if ($design['model'] === 'jev') {
+                    foreach ($DB->get_records('local_vlearner_event', ['runid' => $runid], 'stepno DESC', '*', 0, 3) as $e) {
+                        $event = policy::decode($e->payloadjson);
+                        foreach ($event['results'] as $previousslot => $r) {
+                            $history[] = ['round' => $e->stepno, 'slot' => $previousslot, 'answers' => $r['answers'],
+                                'feedback' => $r['feedbackvisible'] ? $r['feedback'] : []];
+                        }
+                    }
+                }
                 foreach ($slots as $slot) {
                     $qa = $attemptobj->get_question_attempt($slot);
                     $question = $qa->get_question();
@@ -66,7 +80,18 @@ final class runner {
                             || $qa->get_variant() != $spec['variant']) {
                         throw new \RuntimeException('Question version/variant differs from frozen scenario (slot ' . $slot . ')');
                     }
-                    $choice = policy::choose($profile, $state, $spec, $config['seed'], $expectedstep, $slot);
+                    if ($design['model'] === 'jev') {
+                        $request = decision::request($profile, $state, $spec,
+                            html_to_text($question->format_questiontext($qa), 0, false), $history);
+                        $judgment = jev::choose($request, $spec);
+                        $choice = $judgment['choice'];
+                        $decisions[$slot] = $judgment['audit'];
+                    } else {
+                        $choice = $design['model'] === 'dina'
+                            ? experiment::dina($profile, $state, $spec, $config['seed'], $expectedstep, $slot)
+                            : policy::choose($profile, $state, $spec, $config['seed'], $expectedstep, $slot);
+                        $decisions[$slot] = ['model' => $design['model'], 'adapterversion' => experiment::VERSION];
+                    }
                     $responses[$slot] = response::prepare($question->inputs, $choice['answers']);
                     $choices[$slot] = $choice;
                 }
@@ -106,7 +131,7 @@ final class runner {
                         'candidate' => $choices[$slot]['id'], 'kind' => $choices[$slot]['kind'],
                         'answers' => $choices[$slot]['answers'], 'state' => (string)$qa->get_state(),
                         'fraction' => $qa->get_fraction(), 'valid' => $valid,
-                        'feedbackvisible' => $visible, 'learningeligible' => $learningeligible, 'feedback' => $feedback, 'prts' => $prts];
+                        'decision' => $decisions[$slot], 'feedbackvisible' => $visible, 'learningeligible' => $learningeligible, 'feedback' => $feedback, 'prts' => $prts];
                 }
                 $DB->insert_record('local_vlearner_event', (object)['runid' => $runid, 'stepno' => $expectedstep,
                     'attemptid' => $attempt->id, 'timecreated' => time(),

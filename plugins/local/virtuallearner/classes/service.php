@@ -92,7 +92,7 @@ final class service {
     }
 
     public static function create_runs(int $labid, int $profileid, array $scenario, int $seed, int $rounds,
-            int $count = 1, bool $automatic = true): array {
+            int $count = 1, bool $automatic = true, array $options = []): array {
         global $DB, $USER, $CFG;
         self::require_manager();
         if ($rounds < 1 || $rounds > 20 || $count < 1 || $count > 20 || $seed < 1 || $seed > 2147480000) {
@@ -101,7 +101,24 @@ final class service {
         $lab = $DB->get_record('local_vlearner_lab', ['id' => $labid], '*', MUST_EXIST);
         $profile = $DB->get_record('local_vlearner_profile', ['id' => $profileid], '*', MUST_EXIST);
         $config = policy::profile(policy::decode($profile->configjson));
-        $scenario = policy::scenario($scenario, $config);
+        $options = experiment::options($options, $config, $scenario);
+        $scenario = experiment::scenario($scenario, $options, $config);
+        if (in_array($options['model'], ['jev', 'compare_jev'], true) && !jev::available()) {
+            throw new \RuntimeException('Jev is not configured; use rule or DINA without an API key');
+        }
+        if (str_starts_with($options['model'], 'compare_')) {
+            $other = substr($options['model'], 8);
+            $options['comparison'] = bin2hex(random_bytes(12));
+            $transaction = $DB->start_delegated_transaction();
+            try {
+                $options['model'] = 'rule';
+                $left = self::create_runs($labid, $profileid, $scenario, $seed, $rounds, $count, $automatic, $options);
+                $options['model'] = $other;
+                $right = self::create_runs($labid, $profileid, $scenario, $seed, $rounds, $count, $automatic, $options);
+                $transaction->allow_commit();
+                return array_merge($left, $right);
+            } catch (\Throwable $e) { $transaction->rollback($e); }
+        }
         $course = get_course($lab->courseid);
         $instance = $DB->get_record('enrol', ['courseid' => $course->id, 'enrol' => 'manual', 'status' => ENROL_INSTANCE_ENABLED], '*', MUST_EXIST);
         $roles = get_archetype_roles('student');
@@ -120,12 +137,13 @@ final class service {
             $snapshot = ['policyversion' => policy::VERSION, 'profile' => $config, 'scenario' => $scenario,
                 'seed' => $seed + $i, 'rounds' => $rounds, 'automatic' => $automatic,
                 'profilename' => $profile->name, 'moodleversion' => $CFG->version,
-                'stackversion' => get_config('qtype_stack', 'version')];
+                'stackversion' => get_config('qtype_stack', 'version'), 'designversion' => experiment::VERSION,
+                'design' => $options, 'initialstate' => experiment::initial($config, $seed + $i, $options)];
             $now = time();
             $ids[] = $DB->insert_record('local_vlearner_run', (object)['labid' => $labid,
                 'profileid' => $profileid, 'userid' => $userid, 'ownerid' => $USER->id, 'status' => 'queued',
                 'stepno' => 0, 'configjson' => json_encode($snapshot, JSON_THROW_ON_ERROR),
-                'statejson' => json_encode(policy::initial($config, $seed + $i), JSON_THROW_ON_ERROR),
+                'statejson' => json_encode($snapshot['initialstate'], JSON_THROW_ON_ERROR),
                 'timecreated' => $now, 'timemodified' => $now]);
         }
         $transaction->allow_commit();
