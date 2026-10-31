@@ -89,15 +89,37 @@ if ($runid) {
         echo html_writer::link(new moodle_url('/local/virtuallearner/export.php', ['runid' => $runid, 'format' => $format]),
             get_string($format, 'local_virtuallearner'), ['class' => 'btn btn-secondary m-1']);
     }
+    echo html_writer::start_tag('details') . html_writer::tag('summary', get_string('snapshot', 'local_virtuallearner'));
     echo html_writer::tag('pre', s(json_encode(json_decode($run->configjson), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)));
+    echo html_writer::end_tag('details');
     echo $OUTPUT->heading(get_string('details', 'local_virtuallearner'), 3);
     $events = $DB->get_records('local_vlearner_event', ['runid' => $runid], 'stepno');
     if (!$events) { echo html_writer::tag('p', get_string('noresults', 'local_virtuallearner')); }
     foreach ($events as $event) {
         echo html_writer::tag('h4', get_string('step', 'local_virtuallearner') . ' ' . $event->stepno);
         echo html_writer::link(new moodle_url('/mod/quiz/review.php', ['attempt' => $event->attemptid]), 'Moodle #' . $event->attemptid);
+        $observation = json_decode($event->payloadjson, true, 32, JSON_THROW_ON_ERROR);
+        $table = new html_table();
+        $table->head = array_map(fn($key) => get_string($key, 'local_virtuallearner'),
+            ['slot', 'candidate', 'fraction', 'inputstatus', 'feedback']);
+        foreach ($observation['results'] as $slot => $result) {
+            $table->data[] = [$slot,
+                get_string('kind_' . $result['kind'], 'local_virtuallearner') . ' / ' . s($result['candidate']),
+                $result['fraction'] === null ? '—' : s((string)$result['fraction']),
+                get_string($result['valid'] ? 'valid' : 'invalid', 'local_virtuallearner'),
+                html_writer::tag('span', s(implode("\n", $result['feedback'])), ['style' => 'white-space:pre-wrap'])];
+        }
+        echo html_writer::div(html_writer::table($table), 'table-responsive');
+        $changes = [];
+        foreach ($observation['before'] as $skill => $value) {
+            $changes[] = s($skill) . ': ' . get_string($value ? 'mastered' : 'unmastered', 'local_virtuallearner') .
+                ' → ' . get_string($observation['after'][$skill] ? 'mastered' : 'unmastered', 'local_virtuallearner');
+        }
+        echo html_writer::tag('p', get_string('knowledge', 'local_virtuallearner') . ': ' . implode(' / ', $changes));
         // Imported maths, feedback and profiles are shown as escaped text, never executed in this UI.
-        echo html_writer::tag('pre', s(json_encode(json_decode($event->payloadjson), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)));
+        echo html_writer::start_tag('details') . html_writer::tag('summary', get_string('rawdata', 'local_virtuallearner'));
+        echo html_writer::tag('pre', s(json_encode($observation, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)));
+        echo html_writer::end_tag('details');
     }
 } else {
     echo $OUTPUT->heading(get_string('labs', 'local_virtuallearner'), 3);
