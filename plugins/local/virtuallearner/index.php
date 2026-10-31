@@ -159,7 +159,7 @@ if ($runid) {
     $records->close();
     echo html_writer::table($table);
 } else {
-    echo $OUTPUT->heading(get_string('labs' , 'local_virtuallearner'), 3);
+    echo $OUTPUT->heading(get_string('labs', 'local_virtuallearner'), 3);
     foreach ($labs as $entry) {
         $course = get_course($entry->courseid);
         echo html_writer::tag('p', html_writer::link(new moodle_url($base, ['labid' => $entry->id]), s($course->fullname)) . ' · ' .

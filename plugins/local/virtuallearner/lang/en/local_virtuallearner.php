@@ -81,3 +81,5 @@ $string['jevnotconfigured'] = 'Jev is not configured. Ask the site administrator
 $string['jevsettings'] = 'Jev server configuration';
 $string['jevsettings_help'] = 'Optional external API. In config.php, set $CFG->local_virtuallearner_jev_enabled = true and $CFG->local_virtuallearner_jev_key from a server secret. Never place keys in profiles, exports or source control. HTTP redirects are disabled. No fallback or automatic retries.';
 $string['privacy:external'] = 'Optional TypeSafe Jev calls transmit question text, literal candidates, simulated skill states and previous student-visible feedback, without account IDs or credentials in the body.';
+$string['skilllabels'] = 'Skill descriptions (JSON)';
+$string['skilllabels_help'] = 'Optional ID-to-description map, e.g. {"LA000001":"Include the cross term in a binomial expansion"}. Only profile skills are accepted. Descriptions are sent to Jev so opaque skill IDs have mathematical meaning. Empty descriptions do not give Jev a domain definition.';

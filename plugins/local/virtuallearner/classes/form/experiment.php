@@ -20,12 +20,12 @@ final class experiment extends \moodleform {
         }
         $m->addElement('select', 'decisionmodel', get_string('decisionmodel', 'local_virtuallearner'), $models);
         $m->addHelpButton('decisionmodel', 'decisionmodel', 'local_virtuallearner');
-        foreach (['initialstate', 'qmatrix'] as $key) {
+        foreach (['initialstate', 'qmatrix', 'skilllabels'] as $key) {
             $m->addElement('textarea', $key, get_string($key, 'local_virtuallearner'), ['rows' => 4, 'cols' => 70]);
             $m->setType($key, PARAM_RAW); $m->setDefault($key, '{}');
             $m->addHelpButton($key, $key, 'local_virtuallearner');
         }
-        $m->addElement('advcheckbox', 'automatic' , get_string('automatic', 'local_virtuallearner'));
+        $m->addElement('advcheckbox', 'automatic', get_string('automatic', 'local_virtuallearner'));
         $m->setDefault('automatic', 1);
         $m->addElement('textarea', 'scenario', get_string('scenario', 'local_virtuallearner'), ['rows' => 16, 'cols' => 90]);
         $m->setType('scenario', PARAM_RAW); $m->setDefault('scenario', json_encode(json_decode($this->_customdata['lab']->scenariojson), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
@@ -54,7 +54,8 @@ final class experiment extends \moodleform {
     public static function options(array $data): array {
         return ['model' => $data['decisionmodel'] ?? 'rule',
             'initial' => \local_virtuallearner\policy::decode($data['initialstate'] ?: '{}'),
-            'qmatrix' => \local_virtuallearner\policy::decode($data['qmatrix'] ?: '{}')];
+            'qmatrix' => \local_virtuallearner\policy::decode($data['qmatrix'] ?: '{}'),
+            'skilllabels' => \local_virtuallearner\policy::decode($data['skilllabels'] ?: '{}')];
     }
 
 }

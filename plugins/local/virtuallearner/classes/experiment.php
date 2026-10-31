@@ -6,7 +6,7 @@ namespace local_virtuallearner;
 final class experiment {
     public const VERSION = 1;
     public static function options(array $options, array $profile, array $scenario): array {
-        $defaults = ['model' => 'rule', 'initial' => [], 'qmatrix' => [], 'comparison' => ''];
+        $defaults = ['model' => 'rule', 'initial' => [], 'qmatrix' => [], 'skilllabels' => [], 'comparison' => ''];
         if (array_diff(array_keys($options), array_keys($defaults))) {
             throw new \InvalidArgumentException('Unknown experiment option');
         }
@@ -14,9 +14,17 @@ final class experiment {
         if (!in_array($options['model'], ['rule', 'dina', 'jev', 'compare_dina', 'compare_jev'], true)) {
             throw new \InvalidArgumentException('Unknown decision model');
         }
-        if (!is_array($options['initial']) || !is_array($options['qmatrix']) ||
+        if (!is_array($options['initial']) || !is_array($options['qmatrix']) || !is_array($options['skilllabels']) ||
                 !is_string($options['comparison']) || strlen($options['comparison']) > 64) {
             throw new \InvalidArgumentException('Invalid experiment settings');
+        }
+        if (array_diff(array_keys($options['skilllabels']), array_keys($profile['skills']))) {
+            throw new \InvalidArgumentException('Unknown skill description');
+        }
+        foreach ($options['skilllabels'] as $label) {
+            if (!is_string($label) || strlen($label) > 1500) {
+                throw new \InvalidArgumentException('Skill descriptions must be strings up to 1500 bytes');
+            }
         }
         if ($options['initial']) {
             if (array_diff(array_keys($profile['skills']), array_keys($options['initial'])) ||

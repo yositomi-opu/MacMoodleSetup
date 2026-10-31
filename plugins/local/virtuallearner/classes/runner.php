@@ -82,7 +82,7 @@ final class runner {
                     }
                     if ($design['model'] === 'jev') {
                         $request = decision::request($profile, $state, $spec,
-                            html_to_text($question->format_questiontext($qa), 0, false), $history);
+                            html_to_text($question->format_questiontext($qa), 0, false), $history, $design['skilllabels']);
                         $judgment = jev::choose($request, $spec);
                         $choice = $judgment['choice'];
                         $decisions[$slot] = $judgment['audit'];

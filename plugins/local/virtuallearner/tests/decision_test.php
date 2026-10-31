@@ -39,7 +39,10 @@ $onlycorrect=$spec;$onlycorrect['responses']=[$spec['responses'][0]];
 $masteredoptions=experiment::options(['initial'=>['LA000001'=>true,'LA000002'=>true]],$p,[1=>$onlycorrect]);
 vl_assert(experiment::scenario([1=>$onlycorrect],$masteredoptions,$p)[1]['responses']===$onlycorrect['responses'],
     'exact mastered initial state permits no misconception despite zero prior');
-$request=decision::request($p,$state,$spec,'Expand (x+1)^2', [['feedback'=>['Review the middle term']]]);
+vl_reject(fn()=>experiment::options(['skilllabels'=>['XX999999'=>'unknown']],$p,[1=>$spec]));
+vl_reject(fn()=>experiment::options(['skilllabels'=>['LA000001'=>17]],$p,[1=>$spec]));
+$request=decision::request($p,$state,$spec,'Expand (x+1)^2', [['feedback'=>['Review the middle term']]], ['LA000001'=>'Cross term in binomial expansion']);
+vl_assert($request['state']['skill_descriptions']['LA000001']==='Cross term in binomial expansion','skill meaning supplied without grading labels');
 vl_assert($request['model']===decision::MODEL,'pinned model');
 vl_assert(array_keys($request['questions']['response']['criteria'])===['c0','c1','c2','c3'],'opaque candidate IDs');
 $raw=json_encode($request);

@@ -6,13 +6,13 @@ namespace local_virtuallearner;
 final class decision {
     public const VERSION = 1;
     public const MODEL = 'jev-1.14.0';
-    public static function request(array $profile, array $state, array $spec, string $text, array $history): array {
+    public static function request(array $profile, array $state, array $spec, string $text, array $history, array $skilllabels = []): array {
         $criteria = [];
         foreach (array_values($spec['responses']) as $i => $response) {
             $criteria['c' . $i] = json_encode($response['answers'], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
         }
         $body = ['model' => self::MODEL, 'state' => ['question' => $text,
-            'required_skills' => $spec['skills'], 'current_mastery' => $state,
+            'required_skills' => $spec['skills'], 'skill_descriptions' => $skilllabels, 'current_mastery' => $state,
             'learner_parameters' => array_diff_key($profile, ['skills' => true]), 'previous_visible_feedback' => $history],
             'questions' => ['response' => ['type' => 'choice',
                 'instructions' => 'Predict the response this simulated learner would submit, not the best mathematical answer. '

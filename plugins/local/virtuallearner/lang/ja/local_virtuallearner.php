@@ -81,3 +81,5 @@ $string['jevnotconfigured'] = 'Jevが未設定です。管理者が設定する�
 $string['jevsettings'] = 'Jevのサーバー設定';
 $string['jevsettings_help'] = '任意の外部APIです。config.phpで$CFG->local_virtuallearner_jev_enabled = trueを指定し、$CFG->local_virtuallearner_jev_keyにはサーバー側の秘密情報からキーを設定します。プロフィール・出力・Gitにキーを含めないでください。リダイレクト・代替モデルへの切替・自動再試行は行いません。';
 $string['privacy:external'] = '任意のTypeSafe Jev連携は問題文・解答候補・仮想習熟状態・過去の公開フィードバックを送信します。本文にアカウントIDや認証情報を含めません。';
+$string['skilllabels'] = 'スキルの説明（JSON）';
+$string['skilllabels_help'] = '例：{"LA000001":"二項式の展開で交差項を求める"}。プロフィールにあるスキルだけを指定します。Jevへ説明を渡すことでIDに数学的な意味を与えます。空欄ではIDに対応する知識の意味は伝わりません。';
