@@ -139,3 +139,8 @@ NAS上でのMoodle起動とWindowsでの実行は未検証。
 
 - Reported existing PostgreSQL password-authentication failure during make setup. Inspection found Mac Bash Compose calls inherited DB_PASSWORD/ADMIN_PASSWORD/MOODLE_PORT from the caller; shell interpolation can override the explicitly selected .env. Match the existing Python manager by removing only those three variables from each Compose subprocess. No credentials, files, DB roles or volumes are reset or changed.
 - Regression executes the real Bash launcher with synthetic Darwin/Docker doubles and conflicting shell settings across setup/start/restart/check/stop; it checks that overrides are absent and the original settings bytes remain unchanged. All 15 Python tests, Bash syntax and diff whitespace checks pass locally. This proves environment isolation, not the cause of the user's particular database mismatch; their Mac Docker/database was not accessed. If authentication still fails, retain .env and volumes and compare locally against the original private settings/backup without posting secrets.
+
+
+## 2026-11-01 — Parsons authoring verification
+
+Disposable synthetic fixtures only. Run 41252664814 passed Moodle 4.5/5.3 import and STACK grading (teacher, alternate, wrong, missing, extra, duplicate steps). Updated fixtures exercise answer-dependent CASText after PRT feedback initialization. No user banks included.
