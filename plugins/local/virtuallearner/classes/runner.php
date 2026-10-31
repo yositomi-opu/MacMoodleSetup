@@ -103,7 +103,7 @@ final class runner {
                         }
                         $prts[$name] = ['observed' => true, 'notes' => $result->get_answernotes(false), 'path' => $result->get_path(),
                             'errors' => $result->get_errors()];
-                        if ($options->attempt && $options->specificfeedback != \question_display_options::HIDDEN) {
+                        if ($options->attempt && $options->feedback != \question_display_options::HIDDEN) {
                             $feedback[] = html_to_text((string)$result->get_feedback(), 0, false);
                         }
                     }
