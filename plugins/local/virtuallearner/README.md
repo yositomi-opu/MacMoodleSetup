@@ -20,6 +20,7 @@ MoodleSTACKSetupではDockerイメージへ同梱します。ソース更新後�
 - 入力ミスを先に抽選し、そうでなければ習得状態に応じて正答・ミス・推測・対応する誤概念候補を選びます。設定した誤りに候補がない場合は設定を拒否します。
 - 誤概念はスキルに対応する候補です。複数の誤概念が同時に現れる場合には、その組合せの解答候補を作成者が用意してください。プラグインが行列計算や誤答発見を行うわけではありません。
 - 候補のcorrect/misconception等は作成者が意図した分類です。実際の正誤はSTACKが判定し、分類と得点を別々に記録します。
+- 初期版は1入力変数を1文字列として提出できる入力形式を対象にします。固定行列のように複数セルのPOST値を必要とする入力は理由付きで停止します（無視して採点しません）。
 - 解答候補は文字列です。CAS生成式や任意コードを実行する機能はありません。問題ID・variantを固定し、実行時に一致を検査します。STACK自身は通常どおり数学入力を評価します。
 - 各ステップは遅延フィードバックの小テストを1回完了し、次回は新しい受験を開始します。同じ受験内の対話的な再解答、ランダム問題の選択、Parsons専用候補生成、Tree/Chain自動比較は将来の拡張です。
 - 有効な解答と、学生に公開されるspecific feedbackがあるときだけ、設定した学習率に従って対象スキルを習得状態へ移します。0なら学習しない比較条件、1なら必ず習得します。フィードバックの意味を理解するAIは使っていません。入力無効、または入力エラー候補（invalid）を選んだ場合は学習しません。後者はPRTの独自Validationで通常の誤答として採点される場合も含みます。忘却はありません。
@@ -31,7 +32,7 @@ MoodleSTACKSetupではDockerイメージへ同梱します。ソース更新後�
 
 A deterministic, AI-free simulation lab. Install the plugin at `local/virtuallearner`, run the normal Moodle upgrade, and open Site administration → Plugins → Local plugins → Virtual Learner Lab. Create a sample course, save a profile, and start an experiment. Cron executes one actual deferred-feedback quiz attempt per step using a newly generated, random-password student enrolled only in that lab. No existing learners or courses are adopted.
 
-Profiles specify initial per-skill mastery probabilities, slip, guessing, input errors, learning after visible feedback, and persistence. They are explicit assumptions, not empirically fitted models. The response policy samples fixed, literal candidate answers; it does not generate CAS code or retrieve teacher answers. Every required error has to be represented by a candidate. Question ID and variant are pinned and checked. Only graded input with student-visible specific feedback can trigger the configured simulated learning transition. Learning does not infer semantic comprehension. Invalid input does not imply a knowledge deficit or cause learning.
+Profiles specify initial per-skill mastery probabilities, slip, guessing, input errors, learning after visible feedback, and persistence. They are explicit assumptions, not empirically fitted models. The response policy samples fixed, literal candidate answers; it does not generate CAS code or retrieve teacher answers. Every required error has to be represented by a candidate. Inputs must accept a single textual value per variable; compound cell-based widgets are explicitly rejected in this version. Question ID and variant are pinned and checked. Only graded input with student-visible specific feedback can trigger the configured simulated learning transition. Learning does not infer semantic comprehension. Invalid input does not imply a knowledge deficit or cause learning.
 
 Automatic or stepwise runs support pause/resume, frozen snapshots, immutable observations, CSV/JSON export, and seeded replay with a new student. All recorded scores come from Moodle/STACK, without grade overrides. Each round is a new attempt. Interactive same-attempt retries, BKT fitting, forgetting, automatic PRT/MeLQS skill mapping, Parsons generation, LLM/Jev adapters and automatic Tree/Chain comparisons are not implemented in this first version.
 

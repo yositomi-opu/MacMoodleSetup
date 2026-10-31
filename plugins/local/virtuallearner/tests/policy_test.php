@@ -3,6 +3,7 @@
 if (PHP_SAPI !== 'cli') { http_response_code(403); exit; }
 // Standalone, no Moodle/DB/AI dependency. php .../tests/policy_test.php
 require_once(__DIR__ . '/../classes/policy.php');
+require_once(__DIR__ . '/../classes/response.php');
 use local_virtuallearner\policy;
 $count = 0;
 function vl_assert($condition, string $label): void {
@@ -52,4 +53,21 @@ $modified=$spec;$modified['responses'][0]['answers']['ans1']=123;vl_reject(fn()=
 vl_reject(fn()=>policy::decode('{broken'));
 vl_reject(fn()=>policy::decode(str_repeat('x',65537)));
 vl_reject(fn()=>policy::decode('false'));
-echo "PASS $count deterministic policy assertions\n";
+$rawinput = new class {
+    public function get_expected_data(): array { return ['ans1' => 'raw', 'ans1_val' => 'raw']; }
+};
+$plaininput = new class {
+    public function get_expected_data(): array { return ['ansD' => 'raw']; }
+};
+$matrixinput = new class {
+    public function get_expected_data(): array { return ['ans1_sub_0_0' => 'raw']; }
+};
+$literal = 'matrix([A,b],[C,d]) /* {@x@} */';
+vl_assert(\local_virtuallearner\response::prepare(['ans1'=>$rawinput], ['ans1'=>$literal]) ===
+    ['ans1'=>$literal,'ans1_val'=>$literal], 'preserve input bytes and case');
+vl_assert(\local_virtuallearner\response::prepare(['ans1'=>$rawinput,'ansD'=>$plaininput], ['ansD'=>'2']) ===
+    ['ans1'=>'','ans1_val'=>'','ansD'=>'2'], 'multiple inputs and explicit blank');
+vl_reject(fn()=>\local_virtuallearner\response::prepare(['ans1'=>$matrixinput], ['ans1'=>'matrix([1])']));
+vl_reject(fn()=>\local_virtuallearner\response::prepare(['ans1'=>$rawinput], ['other'=>'x']));
+vl_reject(fn()=>\local_virtuallearner\response::prepare(['ans1'=>$rawinput], ['ans1'=>2]));
+echo "PASS $count policy and response assertions\n";

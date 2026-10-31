@@ -67,16 +67,7 @@ final class runner {
                         throw new \RuntimeException('Question version/variant differs from frozen scenario (slot ' . $slot . ')');
                     }
                     $choice = policy::choose($profile, $state, $spec, $config['seed'], $expectedstep, $slot);
-                    if (array_diff(array_keys($choice['answers']), array_keys($question->inputs))) {
-                        throw new \RuntimeException('Unknown answer input in slot ' . $slot);
-                    }
-                    $responses[$slot] = $choice['answers'];
-                    foreach ($question->inputs as $input => $unused) {
-                        $value = $choice['answers'][$input] ?? '';
-                        $responses[$slot][$input] = $value;
-                        // Simulate the student's explicit interpretation confirmation. STACK still validates content.
-                        $responses[$slot][$input . '_val'] = $value;
-                    }
+                    $responses[$slot] = response::prepare($question->inputs, $choice['answers']);
                     $choices[$slot] = $choice;
                 }
                 $attemptobj->process_submitted_actions(time(), false, $responses);
