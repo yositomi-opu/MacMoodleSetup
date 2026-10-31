@@ -19,6 +19,12 @@ vl_assert(experiment::dina($p,$state,$spec,7,1,1)['id']==='bug','DINA missing re
 $after=policy::learn($p,$state,$scenario[1]['skills'],true,true,7,1,1);
 vl_assert($after===['LA000001'=>true,'LA000002'=>true],'only mapped skill transitions');
 vl_assert(experiment::dina($p,$after,$spec,7,2,1)['id']==='yes','DINA after learning');
+$unrelated=['LA000001'=>false,'LA000002'=>false];
+vl_assert(policy::learn($p,$unrelated,$scenario[1]['skills'],true,true,7,1,1)===
+    ['LA000001'=>true,'LA000002'=>false],'Q-matrix zero skill never learned');
+$both=$spec;$both['skills']=['LA000001','LA000002'];$both['responses'][1]['skills']=$both['skills'];
+vl_assert(experiment::dina($p,['LA000001'=>true,'LA000002'=>false],$both,7,1,1)['id']==='bug',
+    'conjunctive response requires every Q-matrix skill');
 $zero=$p;$zero['feedbacklearn']=0;
 vl_assert(policy::learn($zero,$state,['LA000001'],true,true,7,1,1)===$state,'fixed baseline');
 foreach ([['model'=>'unknown'], ['initial'=>['LA000001'=>false]], ['initial'=>['LA000001'=>0,'LA000002'=>true]],
@@ -29,6 +35,10 @@ foreach ([['model'=>'unknown'], ['initial'=>['LA000001'=>false]], ['initial'=>['
 $coverage=$p;$coverage['skills']['LA000001']=1;
 $nospec=$spec;array_splice($nospec['responses'],1,1);
 vl_reject(fn()=>experiment::scenario([1=>$nospec],$opts,$coverage));
+$onlycorrect=$spec;$onlycorrect['responses']=[$spec['responses'][0]];
+$masteredoptions=experiment::options(['initial'=>['LA000001'=>true,'LA000002'=>true]],$p,[1=>$onlycorrect]);
+vl_assert(experiment::scenario([1=>$onlycorrect],$masteredoptions,$p)[1]['responses']===$onlycorrect['responses'],
+    'exact mastered initial state permits no misconception despite zero prior');
 $request=decision::request($p,$state,$spec,'Expand (x+1)^2', [['feedback'=>['Review the middle term']]]);
 vl_assert($request['model']===decision::MODEL,'pinned model');
 vl_assert(array_keys($request['questions']['response']['criteria'])===['c0','c1','c2','c3'],'opaque candidate IDs');

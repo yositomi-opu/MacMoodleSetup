@@ -27,7 +27,11 @@ final class runner {
             $lab = $DB->get_record('local_vlearner_lab', ['id' => $run->labid], '*', MUST_EXIST);
             $config = policy::decode($run->configjson);
             $profile = policy::profile($config['profile']);
-            $scenario = policy::scenario($config['scenario'], $profile);
+            $design = experiment::options($config['design'] ?? [], $profile, $config['scenario']);
+            $scenario = experiment::scenario($config['scenario'], $design, $profile);
+            if (isset($config['designversion']) && $config['designversion'] !== experiment::VERSION) {
+                throw new \RuntimeException('Experiment design version changed');
+            }
             if (($config['policyversion'] ?? null) !== policy::VERSION) {
                 throw new \RuntimeException('Policy version changed; clone the experiment');
             }
@@ -56,10 +60,6 @@ final class runner {
                 $slots = $attemptobj->get_slots();
                 if (array_map('intval', array_keys($scenario)) !== array_map('intval', $slots)) {
                     throw new \RuntimeException('Scenario must cover every quiz slot, in order');
-                }
-                $design = experiment::options($config['design'] ?? [], $profile, $scenario);
-                if (isset($config['designversion']) && $config['designversion'] !== experiment::VERSION) {
-                    throw new \RuntimeException('Experiment design version changed');
                 }
                 $responses = []; $choices = []; $decisions = [];
                 $history = [];

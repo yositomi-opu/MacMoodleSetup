@@ -48,9 +48,14 @@ if ($options['create']) {
     $pair = \local_virtuallearner\service::create_runs($labid, $pairpid, $scenario, 77, 2, 1, true,
         ['model' => 'compare_dina', 'initial' => ['LA000001' => false, 'LA000002' => true],
             'qmatrix' => [1 => ['LA000001' => 1, 'LA000002' => 0]]]);
+    $masteredscenario = $scenario;
+    $masteredscenario[1]['responses'] = [$scenario[1]['responses'][0]];
+    $ids = \local_virtuallearner\service::create_runs($labid, $p, $masteredscenario, 78, 2, 1, true,
+        ['initial' => ['LA000001' => true]]);
+    $runs['exactmastered'] = reset($ids);
     $runs['paired_rule'] = $pair[0]; $runs['paired_dina'] = $pair[1];
     file_put_contents($fixturepath, json_encode($runs));
-    echo "Created isolated synthetic labs and nine experiments. Run core cron, then --verify.\n";
+    echo "Created isolated synthetic labs and ten experiments. Run core cron, then --verify.\n";
 } else {
     $runs = json_decode(file_get_contents($fixturepath), true, 32, JSON_THROW_ON_ERROR);
     $observations = [];
@@ -89,7 +94,7 @@ if ($options['create']) {
                     cli_error('Hidden feedback incorrectly learned');
                 }
             } else {
-                $expected = ($kind === 'mastered' || $index > 0) ? 1 : 0;
+                $expected = (in_array($kind, ['mastered', 'exactmastered'], true) || $index > 0) ? 1 : 0;
                 if (!$result['valid'] || abs($result['fraction'] - $expected) > 0.000001 || !$result['feedbackvisible']) {
                     cli_error('Actual STACK grading/feedback differs: ' . json_encode($data));
                 }
