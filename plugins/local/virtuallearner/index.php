@@ -4,6 +4,7 @@ require_once(__DIR__ . '/../../config.php');
 require_login();
 \local_virtuallearner\service::require_manager();
 $context = context_system::instance();
+$compare = optional_param('compare', '', PARAM_ALPHANUM);
 $runid = optional_param('runid', 0, PARAM_INT);
 $labid = optional_param('labid', 0, PARAM_INT);
 $PAGE->set_url(new moodle_url('/local/virtuallearner/index.php', array_filter(['runid' => $runid, 'labid' => $labid])));
@@ -40,8 +41,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($operation = optional_param('opera
                     \local_virtuallearner\policy::decode($profile->configjson) != $config['profile']) {
                 throw new RuntimeException('Frozen profile/policy differs; create a new experiment');
             }
+            $design = $config['design'] ?? [];
+            $design['comparison'] = '';
             $ids = \local_virtuallearner\service::create_runs($old->labid, $old->profileid, $config['scenario'],
-                $config['seed'], $config['rounds'], 1, $config['automatic']);
+                $config['seed'], $config['rounds'], 1, $config['automatic'], $design);
             redirect(new moodle_url($base, ['runid' => reset($ids)]));
         } else if (in_array($operation, ['pause', 'resume'], true)) {
             \local_virtuallearner\service::control(required_param('runid', PARAM_INT), $operation);
@@ -68,7 +71,7 @@ if ($lab && $profiles && !$runid) {
             if ((int)$data->labid !== (int)$lab->id) { throw new InvalidArgumentException('Lab mismatch'); }
             $ids = \local_virtuallearner\service::create_runs($lab->id, $data->profileid,
                 \local_virtuallearner\policy::decode($data->scenario), $data->seed, $data->rounds,
-                $data->count, (bool)$data->automatic);
+                $data->count, (bool)$data->automatic, \local_virtuallearner\form\experiment::options((array)$data));
             redirect(new moodle_url($base, ['runid' => reset($ids)]));
         } catch (Throwable $e) { $error = $e->getMessage(); }
     }
@@ -81,6 +84,12 @@ if ($runid) {
     echo html_writer::link($base, get_string('back', 'local_virtuallearner')) . ' · ';
     echo html_writer::link(new moodle_url($base, ['runid' => $runid]), get_string('refresh', 'local_virtuallearner'));
     echo $OUTPUT->heading('#' . $run->id . ' — ' . get_string($run->status, 'local_virtuallearner') . ' (' . $run->stepno . ')', 3);
+    $design = \local_virtuallearner\policy::decode($run->configjson)['design'] ?? ['model' => 'rule'];
+    echo html_writer::tag('p', get_string('decisionmodel', 'local_virtuallearner') . ': ' .
+        get_string('model_' . $design['model'], 'local_virtuallearner'));
+    if (!empty($design['comparison'])) {
+        echo html_writer::link(new moodle_url($base, ['compare' => $design['comparison']]), get_string('comparison', 'local_virtuallearner'));
+    }
     if ($run->error) { echo $OUTPUT->notification(s($run->error), 'error'); }
     if ($run->status === 'queued') { echo vl_post_button('pause', get_string('pause', 'local_virtuallearner'), ['runid' => $runid]); }
     if (in_array($run->status, ['paused', 'failed'], true)) { echo vl_post_button('resume', get_string('resume', 'local_virtuallearner'), ['runid' => $runid]); }
@@ -121,6 +130,34 @@ if ($runid) {
         echo html_writer::tag('pre', s(json_encode($observation, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)));
         echo html_writer::end_tag('details');
     }
+} else if ($compare !== '') {
+    echo html_writer::link($base, get_string('back', 'local_virtuallearner'));
+    echo $OUTPUT->heading(get_string('comparison', 'local_virtuallearner'), 3);
+    $table = new html_table();
+    $table->head = ['ID', get_string('decisionmodel', 'local_virtuallearner'), get_string('seed', 'local_virtuallearner'),
+        get_string('step', 'local_virtuallearner'), get_string('slot', 'local_virtuallearner'),
+        get_string('fraction', 'local_virtuallearner'), get_string('knowledge', 'local_virtuallearner')];
+    $records = $DB->get_recordset('local_vlearner_run', [], 'id');
+    foreach ($records as $r) {
+        $c = \local_virtuallearner\policy::decode($r->configjson);
+        if (($c['design']['comparison'] ?? '') !== $compare) { continue; }
+        $events = $DB->get_records('local_vlearner_event', ['runid' => $r->id], 'stepno');
+        if (!$events) {
+            $table->data[] = [html_writer::link(new moodle_url($base, ['runid' => $r->id]), '#' . $r->id),
+                s($c['design']['model']), $c['seed'], get_string($r->status, 'local_virtuallearner'), '—', '—', s($r->statejson)];
+        }
+        foreach ($events as $event) {
+            $o = \local_virtuallearner\policy::decode($event->payloadjson);
+            foreach ($o['results'] as $slot => $result) {
+                $table->data[] = [html_writer::link(new moodle_url($base, ['runid' => $r->id]), '#' . $r->id),
+                    s($c['design']['model']), $c['seed'], $event->stepno, $slot,
+                    $result['fraction'] === null ? '—' : s((string)$result['fraction']),
+                    s(json_encode($o['after'], JSON_UNESCAPED_UNICODE))];
+            }
+        }
+    }
+    $records->close();
+    echo html_writer::table($table);
 } else {
     echo $OUTPUT->heading(get_string('labs', 'local_virtuallearner'), 3);
     foreach ($labs as $entry) {

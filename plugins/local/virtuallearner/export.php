@@ -20,7 +20,7 @@ if ($profileid) {
 }
 header('Cache-Control: private, no-store');
 header('X-Content-Type-Options: nosniff');
-header('Content-Disposition: attachment; filename="virtuallearner-' . ($profileid ? 'profile-' . $profileid : 'run-' . $runid) . '.' . $format . '"');
+header('Content-Disposition: attachment; filename="virtual_learner-' . ($profileid ? 'profile-' . $profileid : 'run-' . $runid) . '.' . $format . '"');
 if ($format === 'json') {
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
@@ -29,7 +29,7 @@ if ($format === 'json') {
     header('Content-Type: text/csv; charset=utf-8');
     $out = fopen('php://output', 'w'); fwrite($out, "\xEF\xBB\xBF");
     fputcsv($out, ['run', 'step', 'attempt', 'slot', 'questionid', 'variant', 'candidate', 'kind', 'answers',
-        'state', 'fraction', 'valid', 'feedbackvisible', 'feedback', 'prts', 'before', 'after'], ',', '"', '');
+        'state', 'fraction', 'valid', 'feedbackvisible', 'feedback', 'prts', 'before', 'after', 'model', 'comparison', 'seed', 'decision'], ',', '"', '');
     foreach ($payload['events'] as $event) {
         $observation = $event['observation'];
         foreach ($observation['results'] as $slot => $result) {
@@ -38,6 +38,10 @@ if ($format === 'json') {
                 $row[] = is_array($result[$key]) ? json_encode($result[$key], JSON_UNESCAPED_UNICODE) : $result[$key];
             }
             $row[] = json_encode($observation['before']); $row[] = json_encode($observation['after']);
+            $row[] = $payload['config']['design']['model'] ?? 'rule';
+            $row[] = $payload['config']['design']['comparison'] ?? '';
+            $row[] = $payload['config']['seed'];
+            $row[] = json_encode($result['decision'] ?? [], JSON_UNESCAPED_UNICODE);
             $row = array_map(fn($value) => preg_match('/^[=+\-@\t\r]/', (string)$value) ? "'" . $value : $value, $row);
             fputcsv($out, $row, ',', '"', '');
         }

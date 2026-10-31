@@ -14,6 +14,17 @@ final class experiment extends \moodleform {
             $m->addElement('text', $key, get_string($key, 'local_virtuallearner'), ['type' => 'number', 'min' => 1]);
             $m->setType($key, PARAM_INT); $m->setDefault($key, $value); $m->addRule($key, null, 'required');
         }
+        $models = [];
+        foreach (['rule', 'dina', 'jev', 'compare_dina', 'compare_jev'] as $model) {
+            $models[$model] = get_string('model_' . $model, 'local_virtuallearner');
+        }
+        $m->addElement('select', 'decisionmodel', get_string('decisionmodel', 'local_virtuallearner'), $models);
+        $m->addHelpButton('decisionmodel', 'decisionmodel', 'local_virtuallearner');
+        foreach (['initialstate', 'qmatrix', 'skilllabels'] as $key) {
+            $m->addElement('textarea', $key, get_string($key, 'local_virtuallearner'), ['rows' => 4, 'cols' => 70]);
+            $m->setType($key, PARAM_RAW); $m->setDefault($key, '{}');
+            $m->addHelpButton($key, $key, 'local_virtuallearner');
+        }
         $m->addElement('advcheckbox', 'automatic', get_string('automatic', 'local_virtuallearner'));
         $m->setDefault('automatic', 1);
         $m->addElement('textarea', 'scenario', get_string('scenario', 'local_virtuallearner'), ['rows' => 16, 'cols' => 90]);
@@ -26,8 +37,13 @@ final class experiment extends \moodleform {
         $errors = parent::validation($data, $files);
         try {
             $profile = $DB->get_record('local_vlearner_profile', ['id' => $data['profileid']], '*', MUST_EXIST);
-            \local_virtuallearner\policy::scenario(\local_virtuallearner\policy::decode($data['scenario']),
-                \local_virtuallearner\policy::profile(\local_virtuallearner\policy::decode($profile->configjson)));
+            $config = \local_virtuallearner\policy::profile(\local_virtuallearner\policy::decode($profile->configjson));
+            $scenario = \local_virtuallearner\policy::decode($data['scenario']);
+            $options = \local_virtuallearner\experiment::options(self::options($data), $config, $scenario);
+            \local_virtuallearner\experiment::scenario($scenario, $options, $config);
+            if (in_array($options['model'], ['jev', 'compare_jev'], true) && !\local_virtuallearner\jev::available()) {
+                $errors['decisionmodel'] = get_string('jevnotconfigured', 'local_virtuallearner');
+            }
         } catch (\Throwable $e) { $errors['scenario'] = $e->getMessage(); }
         foreach (['rounds', 'count'] as $key) {
             if ($data[$key] < 1 || $data[$key] > 20) { $errors[$key] = '1–20'; }
@@ -35,4 +51,11 @@ final class experiment extends \moodleform {
         if ($data['seed'] < 1 || $data['seed'] > 2147480000) { $errors['seed'] = '1–2147480000'; }
         return $errors;
     }
+    public static function options(array $data): array {
+        return ['model' => $data['decisionmodel'] ?? 'rule',
+            'initial' => \local_virtuallearner\policy::decode($data['initialstate'] ?: '{}'),
+            'qmatrix' => \local_virtuallearner\policy::decode($data['qmatrix'] ?: '{}'),
+            'skilllabels' => \local_virtuallearner\policy::decode($data['skilllabels'] ?: '{}')];
+    }
+
 }

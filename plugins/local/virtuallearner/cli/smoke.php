@@ -42,8 +42,20 @@ if ($options['create']) {
     $ids = \local_virtuallearner\service::create_runs($hiddenlabid, $p,
         \local_virtuallearner\policy::decode($hiddenlab->scenariojson), 12345, 2);
     $runs['hidden'] = reset($ids);
+    $pairprofile = $profile;
+    $pairprofile['skills']['LA000002'] = 0;
+    $pairpid = \local_virtuallearner\service::profile('CI paired initial state', $pairprofile);
+    $pair = \local_virtuallearner\service::create_runs($labid, $pairpid, $scenario, 77, 2, 1, true,
+        ['model' => 'compare_dina', 'initial' => ['LA000001' => false, 'LA000002' => true],
+            'qmatrix' => [1 => ['LA000001' => 1, 'LA000002' => 0]]]);
+    $masteredscenario = $scenario;
+    $masteredscenario[1]['responses'] = [$scenario[1]['responses'][0]];
+    $ids = \local_virtuallearner\service::create_runs($labid, $p, $masteredscenario, 78, 2, 1, true,
+        ['initial' => ['LA000001' => true]]);
+    $runs['exactmastered'] = reset($ids);
+    $runs['paired_rule'] = $pair[0]; $runs['paired_dina'] = $pair[1];
     file_put_contents($fixturepath, json_encode($runs));
-    echo "Created isolated synthetic labs and seven experiments. Run core cron, then --verify.\n";
+    echo "Created isolated synthetic labs and ten experiments. Run core cron, then --verify.\n";
 } else {
     $runs = json_decode(file_get_contents($fixturepath), true, 32, JSON_THROW_ON_ERROR);
     $observations = [];
@@ -62,6 +74,14 @@ if ($options['create']) {
         if ($run->status !== ($kind === 'dropout' ? 'stopped' : 'completed')) {
             cli_error($kind . ': ' . $run->status . ' ' . $run->error);
         }
+        if (str_starts_with($kind, 'paired_')) {
+            $c = \local_virtuallearner\policy::decode($run->configjson);
+            if ($c['initialstate'] !== ['LA000001' => false, 'LA000002' => true] ||
+                    $c['design']['model'] !== substr($kind, 7) || empty($c['design']['comparison'])) {
+                cli_error('Paired initial state/configuration differs');
+            }
+            $paired[$kind] = $c;
+        }
         $events = array_values($DB->get_records('local_vlearner_event', ['runid' => $id], 'stepno'));
         if (count($events) !== ($kind === 'dropout' ? 1 : 2)) { cli_error('Wrong event count'); }
         foreach ($events as $index => $event) {
@@ -74,7 +94,7 @@ if ($options['create']) {
                     cli_error('Hidden feedback incorrectly learned');
                 }
             } else {
-                $expected = ($kind === 'mastered' || $index > 0) ? 1 : 0;
+                $expected = (in_array($kind, ['mastered', 'exactmastered'], true) || $index > 0) ? 1 : 0;
                 if (!$result['valid'] || abs($result['fraction'] - $expected) > 0.000001 || !$result['feedbackvisible']) {
                     cli_error('Actual STACK grading/feedback differs: ' . json_encode($data));
                 }
@@ -93,6 +113,10 @@ if ($options['create']) {
         \core\session\manager::set_user($saveduser);
         if ($DB->count_records('local_vlearner_event', ['runid' => $id]) !== count($events)) { cli_error('Duplicate submission'); }
     }
+    if ($paired['paired_rule']['seed'] !== $paired['paired_dina']['seed'] ||
+            $paired['paired_rule']['design']['comparison'] !== $paired['paired_dina']['design']['comparison']) {
+        cli_error('Paired comparison seed/group differs');
+    }
     if ($observations['learning'] !== $observations['replay']) { cli_error('Seed replay differs'); }
-    echo "PASS: real STACK wrong→feedback→correct, mastered, invalid/no learning, dropout, deterministic replay, hidden-feedback isolation, mismatched-question rollback, student scope and duplicate task rejection.\n";
+    echo "PASS: real STACK wrong→feedback→correct, mastered, invalid/no learning, dropout, deterministic replay, hidden-feedback isolation, mismatched-question rollback, student scope, paired rule/DINA initial states and duplicate task rejection.\n";
 }
