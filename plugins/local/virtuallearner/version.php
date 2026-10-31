@@ -1,6 +1,6 @@
 <?php
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Virtual Learner Lab: deterministic, opt-in experiments on dedicated lab courses.
+// Virtual Learner Lab: opt-in experiments with local and external decision models on dedicated lab courses.
 defined('MOODLE_INTERNAL') || die();
 $plugin->component = 'local_virtuallearner';
 $plugin->version = 2026103101;

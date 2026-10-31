@@ -1,6 +1,6 @@
-# Virtual Learner Lab / 仮想学習者ラボ 0.1.0-alpha
+# Virtual Learner Lab / 仮想学習者ラボ 0.2.0-alpha
 
-AIを使わず、設定した知識・誤概念のプロフィールでSTACK小テストを実際に受験するMoodle追加プラグインです。採点・成績はMoodle/STACKの通常APIで保存し、直接書き換えません。実験用コースとパスワードを公開しない仮想学生を新規作成します。既存コースを実験対象に登録する機能はありません。
+設定した知識・誤概念のプロフィールでSTACK小テストを実際に受験するMoodle追加プラグインです。規則・DINAモデルはAI不要で、Jev判断モデルは任意に追加できます。採点・成績はMoodle/STACKの通常APIで保存し、直接書き換えません。実験用コースとパスワードを公開しない仮想学生を新規作成します。既存コースを実験対象に登録する機能はありません。
 
 ## 使い方
 
@@ -30,11 +30,11 @@ MoodleSTACKSetupではDockerイメージへ同梱します。ソース更新後�
 
 ## English
 
-A deterministic, AI-free simulation lab. Install the plugin at `local/virtuallearner`, run the normal Moodle upgrade, and open Site administration → Plugins → Local plugins → Virtual Learner Lab. Create a sample course, save a profile, and start an experiment. Cron executes one actual deferred-feedback quiz attempt per step using a newly generated, random-password student enrolled only in that lab. No existing learners or courses are adopted.
+A virtual learner simulation lab with deterministic local models and optional Jev judgments. Install the plugin at `local/virtuallearner`, run the normal Moodle upgrade, and open Site administration → Plugins → Local plugins → Virtual Learner Lab. Create a sample course, save a profile, and start an experiment. Cron executes one actual deferred-feedback quiz attempt per step using a newly generated, random-password student enrolled only in that lab. No existing learners or courses are adopted.
 
 Profiles specify initial per-skill mastery probabilities, slip, guessing, input errors, learning after visible feedback, and persistence. They are explicit assumptions, not empirically fitted models. The response policy samples fixed, literal candidate answers; it does not generate CAS code or retrieve teacher answers. Every required error has to be represented by a candidate. Inputs must accept a single textual value per variable; compound cell-based widgets are explicitly rejected in this version. Question ID and variant are pinned and checked. Only graded input with student-visible specific feedback can trigger the configured simulated learning transition. Learning does not infer semantic comprehension. Invalid input does not imply a knowledge deficit or cause learning.
 
-Automatic or stepwise runs support pause/resume, frozen snapshots, immutable observations, CSV/JSON export, and seeded replay with a new student. All recorded scores come from Moodle/STACK, without grade overrides. Each round is a new attempt. Interactive same-attempt retries, BKT fitting, forgetting, automatic PRT/MeLQS skill mapping, Parsons generation, LLM/Jev adapters and automatic Tree/Chain comparisons are not implemented in this first version.
+Automatic or stepwise runs support pause/resume, frozen snapshots, immutable observations, CSV/JSON export, and seeded replay with a new student. All recorded scores come from Moodle/STACK, without grade overrides. Each round is a new attempt. Interactive same-attempt retries, BKT fitting, forgetting, automatic PRT/MeLQS skill mapping, Parsons generation, automatic Tree/Chain comparisons are not implemented. The optional Jev adapter and Q-matrix comparison controls are described below.
 
 ## Verification
 
