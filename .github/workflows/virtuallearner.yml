@@ -1,7 +1,7 @@
 name: Virtual Learner Lab
 on:
   push:
-    branches: [main, 'codex/virtuallearner*']
+    branches: [main]
   pull_request:
   workflow_dispatch:
 concurrency:

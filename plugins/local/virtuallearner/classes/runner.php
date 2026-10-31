@@ -108,13 +108,14 @@ final class runner {
                         }
                     }
                     $visible = (bool)array_filter($feedback, fn($text) => trim($text) !== '');
-                    $state = policy::learn($profile, $state, $scenario[$slot]['skills'], $visible, $valid,
+                    $learningeligible = $valid && $choices[$slot]['kind'] !== 'invalid';
+                    $state = policy::learn($profile, $state, $scenario[$slot]['skills'], $visible, $learningeligible,
                         $config['seed'], $expectedstep, $slot);
                     $results[$slot] = ['questionid' => $question->id, 'variant' => $qa->get_variant(),
                         'candidate' => $choices[$slot]['id'], 'kind' => $choices[$slot]['kind'],
-                        'answers' => $choices[$slot]['answers'], 'state' => $qa->get_state()->get_name(),
+                        'answers' => $choices[$slot]['answers'], 'state' => (string)$qa->get_state(),
                         'fraction' => $qa->get_fraction(), 'valid' => $valid,
-                        'feedbackvisible' => $visible, 'feedback' => $feedback, 'prts' => $prts];
+                        'feedbackvisible' => $visible, 'learningeligible' => $learningeligible, 'feedback' => $feedback, 'prts' => $prts];
                 }
                 $DB->insert_record('local_vlearner_event', (object)['runid' => $runid, 'stepno' => $expectedstep,
                     'attemptid' => $attempt->id, 'timecreated' => time(),
