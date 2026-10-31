@@ -170,3 +170,9 @@ Docker Desktopのデータ消去や `docker compose down -v` はデータを失�
 ソース更新後はバックアップを取り、`make setup start`（5.3は `make setup53 start53`）で再ビルドと通常のプラグイン更新を行います。Windowsは `moodle.cmd` を使います。画面の操作、モデルの仮定、初期版の制限は [プラグインの説明](plugins/local/virtuallearner/README.md) を参照してください。開発版であり、シミュレーション内の学習を実際の教育効果とはみなしません。
 
 English: The bundled alpha Virtual Learner Lab runs deterministic, STACK experiments with local rule/DINA or optional Jev decisions, paired comparisons, explicit Q-matrix/initial states and adjustable learner profiles, dedicated random-password students, real quiz grading, pause/resume and CSV/JSON export. Back up and repeat setup to rebuild/install. See the bilingual [plugin guide](plugins/local/virtuallearner/README.md). Existing courses and students are not automatically operated on.
+
+### PostgreSQLのpassword authentication failed
+
+既存DBのパスワードと接続設定が一致していません。DBや `.env` を削除せず保持してください。Macの旧ランチャーではターミナル側の同名環境変数が `.env` に優先される場合があります。更新前の回避は `env -u DB_PASSWORD -u ADMIN_PASSWORD -u MOODLE_PORT make setup start` です。更新版はこの3変数をCompose呼出時に除外します。それでも続く場合は、初回導入時の `.env`／バックアップ設定と照合してください。パスワードや設定全体を共有欄へ貼り付けないでください。
+
+English: A PostgreSQL password authentication failure means the stored role password and connection settings differ. Preserve `.env` and all volumes. The Mac launcher now excludes inherited DB_PASSWORD, ADMIN_PASSWORD and MOODLE_PORT when invoking Compose, matching the Python manager. If it persists, compare your original private settings or backup locally; do not reset the database or publish credentials.

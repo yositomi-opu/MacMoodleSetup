@@ -16,7 +16,8 @@ docker_ready() {
   docker info >/dev/null 2>&1 || { echo 'Docker Desktop did not become ready.'; exit 1; }
   docker compose version >/dev/null
 }
-compose() { docker compose --project-name macmoodlesetup --env-file .env -f compose.yaml "$@"; }
+# Match the Python manager: this project's .env owns interpolation credentials.
+compose() { env -u DB_PASSWORD -u ADMIN_PASSWORD -u MOODLE_PORT docker compose --project-name macmoodlesetup --env-file .env -f compose.yaml "$@"; }
 if [ "$action" = setup ] && [ ! -e .env ]; then
   umask 077
   { printf 'MOODLE_PORT=8088\nDB_PASSWORD=%s\nADMIN_PASSWORD=Mm1!%s\n' "$(openssl rand -hex 24)" "$(openssl rand -hex 16)"; } > .env
