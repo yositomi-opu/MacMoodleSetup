@@ -1,0 +1,33 @@
+name: Parsons authoring verification
+on:
+  push:
+    branches: [codex/parsons-authoring-check]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  parsons:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ['45', '53']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build and install disposable Moodle
+        run: python scripts/manage.py --moodle '${{ matrix.version }}' setup start
+      - name: Import generated XML and grade actual Parsons responses
+        run: |
+          file=compose.yaml; envfile=.env
+          [ '${{ matrix.version }}' = 53 ] && file=compose53.yaml && envfile=.env53
+          docker compose --env-file "$envfile" -f "$file" exec -T --user www-data web php /opt/macmoodle/parsons/check.php --allow-test-data
+      - name: Logs on failure
+        if: failure()
+        run: python scripts/manage.py --moodle '${{ matrix.version }}' logs
+      - name: Stop disposable services
+        if: always()
+        run: python scripts/manage.py --moodle '${{ matrix.version }}' stop

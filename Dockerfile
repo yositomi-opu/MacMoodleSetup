@@ -13,3 +13,5 @@ COPY docker/bootstrap.sh /opt/macmoodle/bootstrap.sh
 RUN printf 'log_errors=On\nerror_log=/dev/stderr\nmax_input_vars=5000\nmemory_limit=512M\nupload_max_filesize=128M\npost_max_size=128M\n' > /usr/local/etc/php/conf.d/macmoodle.ini
 
 COPY plugins/local/virtuallearner /var/www/html/local/virtuallearner
+
+COPY docker/parsons /opt/macmoodle/parsons

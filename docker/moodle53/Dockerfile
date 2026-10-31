@@ -24,3 +24,5 @@ COPY docker/moodle53/apache.conf /etc/apache2/conf-enabled/macmoodle53.conf
 
 
 COPY plugins/local/virtuallearner /var/www/html/public/local/virtuallearner
+
+COPY docker/parsons /opt/macmoodle/parsons
