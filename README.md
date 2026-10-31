@@ -162,3 +162,11 @@ Docker Desktopのデータ消去や `docker compose down -v` はデータを失�
 
 セットアップコードはMITライセンス。取得されるMoodle・STACK等は各プロジェクトのライセンス
 （主にGPL）に従います。検証状況はHANDOFF.mdを参照してください。
+
+## 仮想学習者ラボ（AIなし・開発版）
+
+追加プラグイン `local_virtuallearner` を同梱します。サイト管理 → プラグイン → ローカルプラグイン → 仮想学習者ラボから、専用実験コース・仮想学生・調整可能なプロフィールを作成し、STACKの実採点とフィードバックを記録できます。AIキーは不要です。既存コースや実学生は自動操作しません。利用は任意です。
+
+ソース更新後はバックアップを取り、`make setup start`（5.3は `make setup53 start53`）で再ビルドと通常のプラグイン更新を行います。Windowsは `moodle.cmd` を使います。画面の操作、モデルの仮定、初期版の制限は [プラグインの説明](plugins/local/virtuallearner/README.md) を参照してください。開発版であり、シミュレーション内の学習を実際の教育効果とはみなしません。
+
+English: The bundled alpha Virtual Learner Lab runs deterministic, AI-free STACK experiments with adjustable learner profiles, dedicated random-password students, real quiz grading, pause/resume and CSV/JSON export. Back up and repeat setup to rebuild/install. See the bilingual [plugin guide](plugins/local/virtuallearner/README.md). Existing courses and students are not automatically operated on.

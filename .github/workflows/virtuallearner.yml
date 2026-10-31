@@ -1,0 +1,59 @@
+name: Virtual Learner Lab
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+concurrency:
+  group: virtuallearner-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: php plugins/local/virtuallearner/tests/policy_test.php
+      - run: find plugins/local/virtuallearner -name '*.php' -print0 | xargs -0 -n1 php -l
+  moodle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ['45', '53']
+    env:
+      VL_VERSION: ${{ matrix.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build, install and start disposable site
+        run: python scripts/manage.py --moodle "$VL_VERSION" setup start
+      - name: Real plugin installation, sample import and experiment creation
+        run: |
+          file=compose.yaml; envfile=.env; [ "$VL_VERSION" = 53 ] && file=compose53.yaml && envfile=.env53
+          plugin=/var/www/html/local/virtuallearner; [ "$VL_VERSION" = 53 ] && plugin=/var/www/html/public/local/virtuallearner
+          docker compose --env-file "$envfile" -f "$file" exec -T --user www-data web php "$plugin/cli/smoke.php" --create --allow-test-data
+      - name: Execute actual Moodle task queue and verify STACK outcomes
+        run: |
+          file=compose.yaml; envfile=.env; [ "$VL_VERSION" = 53 ] && file=compose53.yaml && envfile=.env53
+          plugin=/var/www/html/local/virtuallearner; [ "$VL_VERSION" = 53 ] && plugin=/var/www/html/public/local/virtuallearner
+          for round in 1 2 3; do docker compose --env-file "$envfile" -f "$file" exec -T --user www-data web php admin/cli/cron.php --keep-alive=0; done
+          docker compose --env-file "$envfile" -f "$file" exec -T --user www-data web php "$plugin/cli/smoke.php" --verify --allow-test-data
+      - name: Real browser configuration, student access guard and CSV download
+        if: matrix.version == '53'
+        run: |
+          npm install --prefix /tmp/vl-browser playwright
+          /tmp/vl-browser/node_modules/.bin/playwright install --with-deps chromium
+          NODE_PATH=/tmp/vl-browser/node_modules node plugins/local/virtuallearner/tests/browser.cjs
+      - name: Repeat setup, stop/start, official STACK healthcheck
+        run: python scripts/manage.py --moodle "$VL_VERSION" setup start stop start check
+      - name: Logs on failure
+        if: failure()
+        run: python scripts/manage.py --moodle "$VL_VERSION" logs
+      - name: Stop disposable services
+        if: always()
+        run: python scripts/manage.py --moodle "$VL_VERSION" stop

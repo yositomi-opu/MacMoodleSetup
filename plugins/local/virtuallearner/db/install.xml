@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/virtuallearner/db" VERSION="20261031" COMMENT="Virtual Learner Lab">
+ <TABLES>
+  <TABLE NAME="local_vlearner_lab" COMMENT="Only courses created by this plugin may be simulated">
+   <FIELDS>
+    <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+    <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+    <FIELD NAME="quizid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+    <FIELD NAME="ownerid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+    <FIELD NAME="scenariojson" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+    <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+   </FIELDS>
+   <KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/><KEY NAME="course" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/></KEYS>
+   <INDEXES><INDEX NAME="course_unique" UNIQUE="true" FIELDS="courseid"/></INDEXES>
+  </TABLE>
+  <TABLE NAME="local_vlearner_profile" COMMENT="Versioned by snapshot on experiment creation">
+   <FIELDS>
+    <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+    <FIELD NAME="name" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+    <FIELD NAME="configjson" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+    <FIELD NAME="ownerid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+    <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+   </FIELDS><KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/></KEYS>
+  </TABLE>
+  <TABLE NAME="local_vlearner_run" COMMENT="One synthetic student and frozen configuration per run">
+   <FIELDS>
+    <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+    <FIELD NAME="labid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+    <FIELD NAME="profileid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+    <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+    <FIELD NAME="ownerid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+    <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
+    <FIELD NAME="stepno" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+    <FIELD NAME="configjson" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+    <FIELD NAME="statejson" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+    <FIELD NAME="error" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+    <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+    <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+   </FIELDS>
+   <KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/><KEY NAME="lab" TYPE="foreign" FIELDS="labid" REFTABLE="local_vlearner_lab" REFFIELDS="id"/><KEY NAME="user" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/></KEYS>
+   <INDEXES><INDEX NAME="user_unique" UNIQUE="true" FIELDS="userid"/></INDEXES>
+  </TABLE>
+  <TABLE NAME="local_vlearner_event" COMMENT="Immutable actual grading and simulated state transitions">
+   <FIELDS>
+    <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+    <FIELD NAME="runid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+    <FIELD NAME="stepno" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+    <FIELD NAME="attemptid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+    <FIELD NAME="payloadjson" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+    <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+   </FIELDS><KEYS><KEY NAME="primary" TYPE="primary" FIELDS="id"/><KEY NAME="run" TYPE="foreign" FIELDS="runid" REFTABLE="local_vlearner_run" REFFIELDS="id"/></KEYS>
+   <INDEXES><INDEX NAME="step_unique" UNIQUE="true" FIELDS="runid,stepno"/></INDEXES>
+  </TABLE>
+ </TABLES>
+</XMLDB>
