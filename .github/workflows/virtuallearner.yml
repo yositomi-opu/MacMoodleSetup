@@ -43,6 +43,11 @@ jobs:
           plugin=/var/www/html/local/virtuallearner; [ "$VL_VERSION" = 53 ] && plugin=/var/www/html/public/local/virtuallearner
           for round in 1 2 3; do docker compose --env-file "$envfile" -f "$file" exec -T --user www-data web php admin/cli/cron.php --keep-alive=0; done
           docker compose --env-file "$envfile" -f "$file" exec -T --user www-data web php "$plugin/cli/smoke.php" --verify --allow-test-data
+      - name: Decision adapter with actual STACK runner and simulated provider
+        run: |
+          file=compose.yaml; envfile=.env; [ "$VL_VERSION" = 53 ] && file=compose53.yaml && envfile=.env53
+          plugin=/var/www/html/local/virtuallearner; [ "$VL_VERSION" = 53 ] && plugin=/var/www/html/public/local/virtuallearner
+          docker compose --env-file "$envfile" -f "$file" exec -T --user www-data web php "$plugin/cli/decision_smoke.php" --allow-test-data
       - name: Real browser configuration, student access guard and CSV download
         if: matrix.version == '53'
         run: |
