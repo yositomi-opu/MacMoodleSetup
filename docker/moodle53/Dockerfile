@@ -22,3 +22,5 @@ RUN curl -fsSL --retry 3 https://getcomposer.org/download/2.8.11/composer.phar -
     && rm /tmp/composer.phar
 COPY docker/moodle53/apache.conf /etc/apache2/conf-enabled/macmoodle53.conf
 
+
+COPY plugins/local/virtuallearner /var/www/html/public/local/virtuallearner

@@ -2,3 +2,8 @@
 !docker/
 !docker/**
 !Dockerfile
+
+!plugins/
+!plugins/local/
+!plugins/local/virtuallearner/
+!plugins/local/virtuallearner/**
