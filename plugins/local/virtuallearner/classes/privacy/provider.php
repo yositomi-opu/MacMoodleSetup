@@ -5,8 +5,11 @@ defined('MOODLE_INTERNAL') || die();
 
 final class provider implements \core_privacy\local\metadata\provider, \core_privacy\local\request\plugin\provider {
     public static function get_metadata(\core_privacy\local\metadata\collection $collection): \core_privacy\local\metadata\collection {
-        foreach (['local_vlearner_lab', 'local_vlearner_profile', 'local_vlearner_run', 'local_vlearner_event'] as $table) {
-            $collection->add_database_table($table, [], 'privacy:metadata');
+        foreach (['local_vlearner_lab' => ['ownerid', 'courseid', 'quizid', 'scenariojson'],
+                'local_vlearner_profile' => ['ownerid', 'name', 'configjson'],
+                'local_vlearner_run' => ['ownerid', 'userid', 'configjson', 'statejson', 'error'],
+                'local_vlearner_event' => ['runid', 'attemptid', 'payloadjson', 'timecreated']] as $table => $fields) {
+            $collection->add_database_table($table, array_fill_keys($fields, 'privacy:metadata'), 'privacy:metadata');
         }
         return $collection;
     }

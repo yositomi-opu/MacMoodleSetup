@@ -4,6 +4,9 @@ on:
     branches: [main, 'codex/virtuallearner*']
   pull_request:
   workflow_dispatch:
+concurrency:
+  group: virtuallearner-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:

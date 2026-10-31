@@ -3,7 +3,7 @@
 defined('MOODLE_INTERNAL') || die();
 $string['pluginname'] = '仮想学習者ラボ';
 $string['virtuallearner:manage'] = '仮想学習者の実験を管理する';
-$string['intro'] = 'AIなしの学習者モデルです。専用実験コースと自動作成のログイン不可学生のみを使います。学習率は仮定であり、実証した学習効果ではありません。cronが1ステップにつき小テストを1回受験します。';
+$string['intro'] = 'AIなしの学習者モデルです。専用実験コースと自動作成のパスワードを公開しない学生のみを使います。学習率は仮定であり、実証した学習効果ではありません。cronが1ステップにつき小テストを1回受験します。';
 $string['profiles'] = '学習者プロフィール';
 $string['newprofile'] = '新しいプロフィールとして保存';
 $string['name'] = '名前';

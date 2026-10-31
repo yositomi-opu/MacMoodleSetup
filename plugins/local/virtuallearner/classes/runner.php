@@ -86,7 +86,7 @@ final class runner {
                 foreach ($slots as $slot) {
                     $qa = $attemptobj->get_question_attempt($slot);
                     $question = $qa->get_question();
-                    $valid = $qa->get_state()->is_graded();
+                    $valid = $qa->get_state()->is_graded() && $question->is_complete_response($qa->get_last_qt_data());
                     $feedback = []; $prts = [];
                     foreach ($question->prts as $name => $unused) {
                         if (!$valid) {
@@ -94,10 +94,13 @@ final class runner {
                             continue;
                         }
                         $result = $question->get_prt_result($name, $qa->get_last_qt_data(), true);
-                        $prts[$name] = ['observed' => true, 'notes' => $result->get_answernotes(false),
+                        if ($result->get_errors()) {
+                            throw new \RuntimeException('STACK PRT evaluation error in slot ' . $slot . ' / ' . $name);
+                        }
+                        $prts[$name] = ['observed' => true, 'notes' => $result->get_answernotes(false), 'path' => $result->get_path(),
                             'errors' => $result->get_errors()];
                         if ($options->attempt && $options->specificfeedback != \question_display_options::HIDDEN) {
-                            $feedback[] = html_to_text($result->get_feedback(), 0, false);
+                            $feedback[] = html_to_text((string)$result->get_feedback(), 0, false);
                         }
                     }
                     $visible = (bool)array_filter($feedback, fn($text) => trim($text) !== '');

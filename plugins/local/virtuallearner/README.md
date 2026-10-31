@@ -1,6 +1,6 @@
 # Virtual Learner Lab / 仮想学習者ラボ 0.1.0-alpha
 
-AIを使わず、設定した知識・誤概念のプロフィールでSTACK小テストを実際に受験するMoodle追加プラグインです。採点・成績はMoodle/STACKの通常APIで保存し、直接書き換えません。実験用コースとログイン不可の仮想学生を新規作成します。既存コースを実験対象に登録する機能はありません。
+AIを使わず、設定した知識・誤概念のプロフィールでSTACK小テストを実際に受験するMoodle追加プラグインです。採点・成績はMoodle/STACKの通常APIで保存し、直接書き換えません。実験用コースとパスワードを公開しない仮想学生を新規作成します。既存コースを実験対象に登録する機能はありません。
 
 ## 使い方
 
@@ -28,7 +28,7 @@ MoodleSTACKSetupではDockerイメージへ同梱します。ソース更新後�
 
 ## English
 
-A deterministic, AI-free simulation lab. Install the plugin at `local/virtuallearner`, run the normal Moodle upgrade, and open Site administration → Plugins → Local plugins → Virtual Learner Lab. Create a sample course, save a profile, and start an experiment. Cron executes one actual deferred-feedback quiz attempt per step using a newly generated, non-login student enrolled only in that lab. No existing learners or courses are adopted.
+A deterministic, AI-free simulation lab. Install the plugin at `local/virtuallearner`, run the normal Moodle upgrade, and open Site administration → Plugins → Local plugins → Virtual Learner Lab. Create a sample course, save a profile, and start an experiment. Cron executes one actual deferred-feedback quiz attempt per step using a newly generated, random-password student enrolled only in that lab. No existing learners or courses are adopted.
 
 Profiles specify initial per-skill mastery probabilities, slip, guessing, input errors, learning after visible feedback, and persistence. They are explicit assumptions, not empirically fitted models. The response policy samples fixed, literal candidate answers; it does not generate CAS code or retrieve teacher answers. Every required error has to be represented by a candidate. Question ID and variant are pinned and checked. Only graded input with student-visible specific feedback can trigger the configured simulated learning transition. Learning does not infer semantic comprehension. Invalid input does not imply a knowledge deficit or cause learning.
 

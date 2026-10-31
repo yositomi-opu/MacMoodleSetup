@@ -40,6 +40,7 @@ services:
   cron:
     <<: *moodle
     user: www-data
+    entrypoint: []
     command: [bash, -c, 'while true; do php /var/www/html/admin/cli/cron.php; sleep 60; done']
     profiles: [installed]
 volumes:

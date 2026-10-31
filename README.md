@@ -169,4 +169,4 @@ Docker Desktopのデータ消去や `docker compose down -v` はデータを失�
 
 ソース更新後はバックアップを取り、`make setup start`（5.3は `make setup53 start53`）で再ビルドと通常のプラグイン更新を行います。Windowsは `moodle.cmd` を使います。画面の操作、モデルの仮定、初期版の制限は [プラグインの説明](plugins/local/virtuallearner/README.md) を参照してください。開発版であり、シミュレーション内の学習を実際の教育効果とはみなしません。
 
-English: The bundled alpha Virtual Learner Lab runs deterministic, AI-free STACK experiments with adjustable learner profiles, dedicated non-login students, real quiz grading, pause/resume and CSV/JSON export. Back up and repeat setup to rebuild/install. See the bilingual [plugin guide](plugins/local/virtuallearner/README.md). Existing courses and students are not automatically operated on.
+English: The bundled alpha Virtual Learner Lab runs deterministic, AI-free STACK experiments with adjustable learner profiles, dedicated random-password students, real quiz grading, pause/resume and CSV/JSON export. Back up and repeat setup to rebuild/install. See the bilingual [plugin guide](plugins/local/virtuallearner/README.md). Existing courses and students are not automatically operated on.

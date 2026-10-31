@@ -72,7 +72,7 @@ final class service {
         $qid = (int)reset($format->questionids);
         $quizrecord = $DB->get_record('quiz', ['id' => $module->instance], '*', MUST_EXIST);
         quiz_add_quiz_question($qid, $quizrecord);
-        quiz_update_sumgrades($quizrecord);
+        \mod_quiz\quiz_settings::create($quizrecord->id)->get_grade_calculator()->recompute_quiz_sumgrades();
         $manual = enrol_get_plugin('manual');
         if (!$DB->record_exists('enrol', ['courseid' => $course->id, 'enrol' => 'manual'])) {
             $manual->add_instance($course);
@@ -111,11 +111,11 @@ final class service {
         $transaction = $DB->start_delegated_transaction(); $ids = [];
         for ($i = 0; $i < $count; $i++) {
             $token = bin2hex(random_bytes(8));
-            // Non-login accounts cannot accidentally be used as ordinary student logins.
-            $userid = user_create_user((object)['username' => 'vl_' . $token, 'auth' => 'nologin',
+            // Core task execution requires an active auth method. Generate an unshared, random password.
+            $userid = user_create_user((object)['username' => 'vl_' . $token, 'auth' => 'manual', 'password' => bin2hex(random_bytes(32)),
                 'firstname' => 'Virtual', 'lastname' => 'Learner ' . $token,
                 'email' => 'vl_' . $token . '@example.invalid', 'confirmed' => 1,
-                'mnethostid' => $CFG->mnet_localhost_id, 'lang' => current_language()], false, false);
+                'mnethostid' => $CFG->mnet_localhost_id, 'lang' => current_language()], true, false);
             enrol_get_plugin('manual')->enrol_user($instance, $userid, $role->id);
             $snapshot = ['policyversion' => policy::VERSION, 'profile' => $config, 'scenario' => $scenario,
                 'seed' => $seed + $i, 'rounds' => $rounds, 'automatic' => $automatic,

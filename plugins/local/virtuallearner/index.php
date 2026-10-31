@@ -29,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($operation = optional_param('opera
             redirect(new moodle_url($base, ['labid' => $labid]), get_string('created', 'local_virtuallearner'));
         } else if ($operation === 'importprofile') {
             $data = \local_virtuallearner\policy::decode(required_param('profilejson', PARAM_RAW));
+            if (($data['schema'] ?? null) !== 1) { throw new InvalidArgumentException('Unsupported profile schema'); }
             \local_virtuallearner\service::profile($data['name'], $data['profile']);
             redirect($base, get_string('created', 'local_virtuallearner'));
         } else if ($operation === 'replay') {

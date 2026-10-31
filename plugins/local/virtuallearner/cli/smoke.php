@@ -30,13 +30,34 @@ if ($options['create']) {
     $p = \local_virtuallearner\service::profile('CI replay', $profile);
     $ids = \local_virtuallearner\service::create_runs($labid, $p, $scenario, 12345, 2);
     $runs['replay'] = reset($ids);
+    $bad = $scenario;
+    $bad[1]['questionid'] = 2147480000;
+    $ids = \local_virtuallearner\service::create_runs($labid, $p, $bad, 12345, 2);
+    $runs['mismatch'] = reset($ids);
+    $hiddenlabid = \local_virtuallearner\service::demo('Virtual Learner CI hidden feedback');
+    $hiddenlab = $DB->get_record('local_vlearner_lab', ['id' => $hiddenlabid], '*', MUST_EXIST);
+    // Fixture-only setting: never alter an existing course or a grade.
+    $DB->set_field('quiz', 'reviewspecificfeedback', 0, ['id' => $hiddenlab->quizid]);
+    $ids = \local_virtuallearner\service::create_runs($hiddenlabid, $p,
+        \local_virtuallearner\policy::decode($hiddenlab->scenariojson), 12345, 2);
+    $runs['hidden'] = reset($ids);
     file_put_contents($fixturepath, json_encode($runs));
-    echo "Created isolated synthetic lab and five experiments. Run core cron, then --verify.\n";
+    echo "Created isolated synthetic labs and seven experiments. Run core cron, then --verify.\n";
 } else {
     $runs = json_decode(file_get_contents($fixturepath), true, 32, JSON_THROW_ON_ERROR);
     $observations = [];
     foreach ($runs as $kind => $id) {
         $run = $DB->get_record('local_vlearner_run', ['id' => $id], '*', MUST_EXIST);
+        if (has_capability('local/virtuallearner:manage', context_system::instance(), $run->userid)) {
+            cli_error('Synthetic student has manager capability');
+        }
+        if ($kind === 'mismatch') {
+            if ($run->status !== 'failed' || $DB->count_records('local_vlearner_event', ['runid' => $id])
+                    || $DB->count_records('quiz_attempts', ['userid' => $run->userid])) {
+                cli_error('Mismatched question did not fail atomically');
+            }
+            continue;
+        }
         if ($run->status !== ($kind === 'dropout' ? 'stopped' : 'completed')) {
             cli_error($kind . ': ' . $run->status . ' ' . $run->error);
         }
@@ -47,6 +68,10 @@ if ($options['create']) {
             $result = $data['results'][1];
             if ($kind === 'invalid') {
                 if ($result['valid'] || $data['after']['LA000001']) { cli_error('Invalid answer incorrectly graded or learned'); }
+            } else if ($kind === 'hidden') {
+                if (!$result['valid'] || $result['fraction'] != 0 || $result['feedbackvisible'] || $data['after']['LA000001']) {
+                    cli_error('Hidden feedback incorrectly learned');
+                }
             } else {
                 $expected = ($kind === 'mastered' || $index > 0) ? 1 : 0;
                 if (!$result['valid'] || abs($result['fraction'] - $expected) > 0.000001 || !$result['feedbackvisible']) {
@@ -68,5 +93,5 @@ if ($options['create']) {
         if ($DB->count_records('local_vlearner_event', ['runid' => $id]) !== count($events)) { cli_error('Duplicate submission'); }
     }
     if ($observations['learning'] !== $observations['replay']) { cli_error('Seed replay differs'); }
-    echo "PASS: real STACK wrong→feedback→correct, mastered, invalid/no learning, dropout, deterministic replay, duplicate task rejection.\n";
+    echo "PASS: real STACK wrong→feedback→correct, mastered, invalid/no learning, dropout, deterministic replay, hidden-feedback isolation, mismatched-question rollback, student scope and duplicate task rejection.\n";
 }
