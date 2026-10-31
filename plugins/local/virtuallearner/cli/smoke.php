@@ -1,5 +1,6 @@
 <?php
 // SPDX-License-Identifier: GPL-3.0-or-later
+if (PHP_SAPI !== 'cli') { http_response_code(403); exit; }
 // Synthetic data only. Run exclusively on a disposable CI installation.
 define('CLI_SCRIPT', true);
 require_once(__DIR__ . '/../../../config.php');

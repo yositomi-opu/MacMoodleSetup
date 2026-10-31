@@ -1,5 +1,6 @@
 <?php
 // SPDX-License-Identifier: GPL-3.0-or-later
+if (PHP_SAPI !== 'cli') { http_response_code(403); exit; }
 // Standalone, no Moodle/DB/AI dependency. php .../tests/policy_test.php
 require_once(__DIR__ . '/../classes/policy.php');
 use local_virtuallearner\policy;

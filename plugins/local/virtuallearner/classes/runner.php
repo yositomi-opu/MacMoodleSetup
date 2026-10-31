@@ -94,6 +94,10 @@ final class runner {
                             continue;
                         }
                         $result = $question->get_prt_result($name, $qa->get_last_qt_data(), true);
+                        if (!$result->is_evaluated()) {
+                            $prts[$name] = ['observed' => false, 'reason' => 'PRT not evaluated'];
+                            continue;
+                        }
                         if ($result->get_errors()) {
                             throw new \RuntimeException('STACK PRT evaluation error in slot ' . $slot . ' / ' . $name);
                         }

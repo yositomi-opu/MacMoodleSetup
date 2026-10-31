@@ -112,7 +112,7 @@ final class service {
         for ($i = 0; $i < $count; $i++) {
             $token = bin2hex(random_bytes(8));
             // Core task execution requires an active auth method. Generate an unshared, random password.
-            $userid = user_create_user((object)['username' => 'vl_' . $token, 'auth' => 'manual', 'password' => bin2hex(random_bytes(32)),
+            $userid = user_create_user((object)['username' => 'vl_' . $token, 'auth' => 'manual', 'password' => 'Vl1!' . bin2hex(random_bytes(24)),
                 'firstname' => 'Virtual', 'lastname' => 'Learner ' . $token,
                 'email' => 'vl_' . $token . '@example.invalid', 'confirmed' => 1,
                 'mnethostid' => $CFG->mnet_localhost_id, 'lang' => current_language()], true, false);

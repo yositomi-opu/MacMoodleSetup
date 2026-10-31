@@ -4,7 +4,7 @@ const fs=require('node:fs');const cp=require('node:child_process');
 (async()=>{
  const env=Object.fromEntries(fs.readFileSync('.env53','utf8').trim().split(/\r?\n/).map(l=>l.split('=')));
  const base='http://localhost:'+env.MOODLE_PORT;
- const cron=()=>cp.execFileSync('docker',['compose','--env-file','.env53','-f','compose53.yaml','exec','-T','--user','www-data','web','php','admin/cli/cron.php'],{stdio:'pipe',timeout:120000});
+ const cron=()=>cp.execFileSync('docker',['compose','--env-file','.env53','-f','compose53.yaml','exec','-T','--user','www-data','web','php','admin/cli/cron.php','--keep-alive=0'],{stdio:'pipe',timeout:120000});
  const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
  try{
   const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(String(e)));
@@ -27,6 +27,7 @@ const fs=require('node:fs');const cp=require('node:child_process');
   await page.getByRole('heading',{name:/Completed/}).waitFor();
   const done=await(await page.request.get(base+'/local/virtuallearner/export.php?runid='+data.runid+'&format=json')).json();
   if(done.events.length!==2||done.events[1].observation.results['1'].fraction!==1)throw Error('Expected learning and correct second response');
+  const cliGuard=await page.request.get(base+'/local/virtuallearner/cli/smoke.php');if(cliGuard.status()!==403)throw Error('CLI endpoint exposed to HTTP');
   const anonymous=await browser.newPage();await anonymous.goto(base+'/local/virtuallearner/export.php?runid='+data.runid+'&format=json');
   if(!anonymous.url().includes('/login/'))throw Error('Unauthenticated export was not blocked');
   if(errors.length)throw Error(errors.join('\n'));console.log('PASS real browser: profile, sample course, manual step/pause/resume, STACK wrong→correct, CSV/JSON, anonymous access guard');
